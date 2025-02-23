@@ -60,15 +60,16 @@ BOOL SceneBuilder::BuildGame()
             if (!F.sound_static.stream.save_to(lev_sound_static.c_str()))
                 bRes = FALSE;
     }
-    /*
-        // save sound envs
-        {
-            xr_string lev_sound_env 			= MakeLevelPath("level.snd_env");
-            EFS.MarkFile						(lev_sound_env.c_str(),true);
-            if (LSndLib->MakeEnvGeometry		(F.sound_env_geom.stream,false))
-                if (!F.sound_env_geom.stream.save_to(lev_sound_env.c_str())) bRes = FALSE;
-        }
-    */
+
+    // save sound envs
+    {
+        xr_string lev_sound_env = MakeLevelPath("level.snd_env");
+        EFS.MarkFile(lev_sound_env.c_str(), true);
+        if (LSndLib->MakeEnvGeometry(F.sound_env_geom.stream, false))
+            if (!F.sound_env_geom.stream.save_to(lev_sound_env.c_str()))
+                bRes = FALSE;
+    }
+
     // save static PG
     {
         xr_string lev_pe_static = MakeLevelPath("level.ps_static");
@@ -86,12 +87,12 @@ BOOL SceneBuilder::BuildGame()
 
         F.fog_vol.stream.w_u16(3);   // version
 
-        ObjectList& fogs = Scene->ListObj(OBJCLASS_FOG_VOL);
+        ObjectList&                     fogs = Scene->ListObj(OBJCLASS_FOG_VOL);
 
         typedef xr_vector<EFogVolume*>  tfog_group;
         typedef xr_map<u32, tfog_group> tfog_groups;
 
-        tfog_groups fog_groups;
+        tfog_groups                     fog_groups;
 
         for (ObjectIt oit = fogs.begin(); oit != fogs.end(); ++oit)
         {

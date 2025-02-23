@@ -14,6 +14,7 @@ void st_LevelOptions::Reset()
     m_LevelPrefix      = "level_prefix";
     m_LightHemiQuality = 3;
     m_LightSunQuality  = 3;
+    m_LightSunDispersion = 3.f;
     m_BOPText          = "";
     m_map_version      = "1.0";
     m_BuildParams.Init();
@@ -58,10 +59,10 @@ EScene::EScene()
     g_SpatialSpacePhysic = xr_new<ISpatial_DB>();
     // first init scene graph for objects
     // mapRenderObjects.init(MAX_VISUALS);
-    // 	Build options
-    m_SummaryInfo = 0;
-    // ClearSnapList	(false);
-    //   g_frmConflictLoadObject 		= xr_new<TfrmAppendObjectInfo>((TComponent*)NULL);
+    // Build options
+    m_SummaryInfo        = 0;
+    // ClearSnapList(false);
+    // g_frmConflictLoadObject = xr_new<TfrmAppendObjectInfo>((TComponent*)NULL);
 }
 
 EScene::~EScene()
@@ -343,11 +344,12 @@ void EScene::Modified()
 {
     switch (LTools->CurrentClassID())
     {
-        case OBJCLASS_SPAWNPOINT: {
+        case OBJCLASS_SPAWNPOINT:
+        {
             ObjectList lst;
             if (Scene->GetQueryObjects(lst, LTools->CurrentClassID(), 1, -1, 0))
             {
-                for (CCustomObject* Obj : lst)
+                for (CCustomObject* Obj: lst)
                 {
                     CSpawnPoint* Spawn = dynamic_cast<CSpawnPoint*>(Obj);
                     if (Spawn && Spawn->IsGraphPoint())
@@ -402,7 +404,8 @@ bool EScene::IfModified()
                 if (!ExecCommand(COMMAND_SAVE))
                     return false;
                 break;
-            case mrNo: {
+            case mrNo:
+            {
                 m_RTFlags.set(flRT_Unsaved, FALSE);
                 ExecCommand(COMMAND_UPDATE_CAPTION);
             }
@@ -460,13 +463,7 @@ bool EScene::ExportGame(SExportStreams* F)
     return bres;
 }
 
-bool EScene::Validate(
-    bool bNeedOkMsg,
-    bool bTestPortal,
-    bool bTestHOM,
-    bool bTestGlow,
-    bool bTestShaderCompatible,
-    bool bFullTest)
+bool EScene::Validate(bool bNeedOkMsg, bool bTestPortal, bool bTestHOM, bool bTestGlow, bool bTestShaderCompatible, bool bFullTest)
 {
     bool                bRes  = true;
     SceneToolsMapPairIt t_it  = m_SceneTools.begin();
@@ -639,7 +636,7 @@ void EScene::HighlightTexture(LPCSTR t_name, bool allow_ratio, u32 t_width, u32 
 
 xr_token js_token[] = {{"1 - Low", 1}, {"4 - Medium", 4}, {"9 - High", 9}, {0, 0}};
 
-void EScene::OnBuildControlClick(ButtonValue* V, bool& bModif, bool& bSafe)
+void     EScene::OnBuildControlClick(ButtonValue* V, bool& bModif, bool& bSafe)
 {
     switch (V->btn_num)
     {
@@ -675,13 +672,12 @@ void EScene::FillProp(LPCSTR pref, PropItemVec& items, ObjClassID cls_id)
     PHelper().CreateRText(items, PrepareKey(pref, "Scene\\Name prefix"), &m_LevelOp.m_LevelPrefix);
 
     PropValue* V;
-    auto       NaneProp =
-        PHelper().CreateRText(items, PrepareKey(pref, "Scene\\Build options\\Level path"), &m_LevelOp.m_FNLevelPath);
+    auto       NaneProp = PHelper().CreateRText(items, PrepareKey(pref, "Scene\\Build options\\Level path"), &m_LevelOp.m_FNLevelPath);
     NaneProp->OnChangeEvent.bind(this, &EScene::OnNameChange);
     PHelper().CreateRText(items, PrepareKey(pref, "Scene\\Build options\\Custom data"), &m_LevelOp.m_BOPText);
     PHelper().CreateRText(items, PrepareKey(pref, "Scene\\Map version"), &m_LevelOp.m_map_version);
 
-    m_LevelOp.m_mapUsage.FillProp("Scene\\Usage", items);
+    CreatePropsForGameTypeChooser(&m_LevelOp.m_mapUsage, "Scene\\Usage", items);
 
     // common
     ButtonValue* B;
@@ -689,42 +685,27 @@ void EScene::FillProp(LPCSTR pref, PropItemVec& items, ObjClassID cls_id)
     B->OnBtnClickEvent.bind(this, &EScene::OnBuildControlClick);
 
     BOOL enabled = (m_LevelOp.m_BuildParams.m_quality == ebqCustom);
-    V            = PHelper().CreateU8(
-        items, PrepareKey(pref, "Scene\\Build options\\Lighting\\Hemisphere quality [0-3]"),
-        &m_LevelOp.m_LightHemiQuality, 0, 3);
+    V = PHelper().CreateU8(items, PrepareKey(pref, "Scene\\Build options\\Lighting\\Hemisphere quality [0-4]"), &m_LevelOp.m_LightHemiQuality, 0, 4);
     V->Owner()->Enable(enabled);
-    V = PHelper().CreateU8(
-        items, PrepareKey(pref, "Scene\\Build options\\Lighting\\Sun shadow quality [0-3]"),
-        &m_LevelOp.m_LightSunQuality, 0, 3);
+    V = PHelper().CreateU8(items, PrepareKey(pref, "Scene\\Build options\\Lighting\\Sun shadow quality [0-5]"), &m_LevelOp.m_LightSunQuality, 0, 5);
     V->Owner()->Enable(enabled);
+    PHelper().CreateFloat(items, PrepareKey(pref, "Scene\\Build options\\Lighting\\Sun dispersion"), &m_LevelOp.m_LightSunDispersion, 0.1f, 180.f);
 
     // Build Options
     // Normals & optimization
-    V = PHelper().CreateFloat(
-        items, PrepareKey(pref, "Scene\\Build options\\Optimizing\\Normal smooth angle"),
-        &m_LevelOp.m_BuildParams.m_sm_angle, 0.f, 180.f);
+    V = PHelper().CreateFloat(items, PrepareKey(pref, "Scene\\Build options\\Optimizing\\Normal smooth angle"), &m_LevelOp.m_BuildParams.m_sm_angle, 0.f, 180.f);
     V->Owner()->Enable(enabled);
-    V = PHelper().CreateFloat(
-        items, PrepareKey(pref, "Scene\\Build options\\Optimizing\\Weld distance (m)"),
-        &m_LevelOp.m_BuildParams.m_weld_distance, 0.f, 1.f, 0.001f, 4);
+    V = PHelper().CreateFloat(items, PrepareKey(pref, "Scene\\Build options\\Optimizing\\Weld distance (m)"), &m_LevelOp.m_BuildParams.m_weld_distance, 0.f, 1.f, 0.001f, 4);
     V->Owner()->Enable(enabled);
 
     // Light maps
-    V = PHelper().CreateFloat(
-        items, PrepareKey(pref, "Scene\\Build options\\Lighting\\Pixel per meter"),
-        &m_LevelOp.m_BuildParams.m_lm_pixels_per_meter, 0.f, 20.f);
+    V = PHelper().CreateFloat(items, PrepareKey(pref, "Scene\\Build options\\Lighting\\Pixel per meter"), &m_LevelOp.m_BuildParams.m_lm_pixels_per_meter, 0.f, 20.f);
     V->Owner()->Enable(enabled);
-    V = PHelper().CreateU32(
-        items, PrepareKey(pref, "Scene\\Build options\\Lighting\\Error (LM collapsing)"),
-        &m_LevelOp.m_BuildParams.m_lm_rms, 0, 255);
+    V = PHelper().CreateU32(items, PrepareKey(pref, "Scene\\Build options\\Lighting\\Error (LM collapsing)"), &m_LevelOp.m_BuildParams.m_lm_rms, 0, 255);
     V->Owner()->Enable(enabled);
-    V = PHelper().CreateU32(
-        items, PrepareKey(pref, "Scene\\Build options\\Lighting\\Error (LM zero)"),
-        &m_LevelOp.m_BuildParams.m_lm_rms_zero, 0, 255);
+    V = PHelper().CreateU32(items, PrepareKey(pref, "Scene\\Build options\\Lighting\\Error (LM zero)"), &m_LevelOp.m_BuildParams.m_lm_rms_zero, 0, 255);
     V->Owner()->Enable(enabled);
-    V = PHelper().CreateToken32(
-        items, PrepareKey(pref, "Scene\\Build options\\Lighting\\Jitter samples"),
-        &m_LevelOp.m_BuildParams.m_lm_jitter_samples, js_token);
+    V = PHelper().CreateToken32(items, PrepareKey(pref, "Scene\\Build options\\Lighting\\Jitter samples"), &m_LevelOp.m_BuildParams.m_lm_jitter_samples, js_token);
     V->Owner()->Enable(enabled);
 
     // tools options
@@ -874,6 +855,16 @@ bool EScene::BuildCForm()
 bool EScene::RayPick(const Fvector& start, const Fvector& dir, float& dis, Fvector* pt, Fvector* n)
 {
     return Tools->RayPick(start, dir, dis, pt, n);
+}
+
+IC float EScene::ZFar()
+{
+    return UI->ZFar();
+}
+
+const Fvector& EScene::GetCameraPosition() const
+{
+    return CUICamera->GetPosition();
 }
 
 void EScene::RegisterSubstObjectName(const xr_string& _from, const xr_string& _to)

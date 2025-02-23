@@ -17,17 +17,22 @@ class ESceneLightTool: public ESceneCustomOTool
     friend class SceneBuilder;
     friend class CLight;
 
+    void OnLightSunChanged(PropValue* sender);
+
 protected:
     enum
     {
         flShowSun         = (1 << 31),
         flShowControlName = (1 << 30),
+        flWthrSunDir      = (1 << 29),
+        flWthrHemi        = (1 << 28)
     };
-    Flags32 m_Flags;
+
+    Flags32            m_Flags;
     // hemisphere
-    u32 m_HemiControl;
+    u32                m_HemiControl;
     // sun
-    Fvector2 m_SunShadowDir;
+    Fvector2           m_SunShadowDir;
 
     // run time
     xr_vector<CLight*> frame_light;
@@ -52,7 +57,7 @@ public:
     virtual void Clear(bool bSpecific = false);
 
     // definition
-    IC LPCSTR ClassName()
+    IC LPCSTR    ClassName()
     {
         return "light";
     }
@@ -84,20 +89,20 @@ public:
     virtual void OnRender(int priority, bool strictB2F);
     virtual void AfterRender();
 
-    void SelectLightsForObject(CCustomObject* obj);
+    void         SelectLightsForObject(CCustomObject* obj);
 
     virtual void FillProp(LPCSTR pref, PropItemVec& items);
 
-    xr_string   GenLightControlName();
-    xr_rtoken*  FindLightControl(int id);
-    RTokenVecIt FindLightControlIt(LPCSTR name);
-    xr_rtoken*  FindLightControl(LPCSTR name)
+    xr_string    GenLightControlName();
+    xr_rtoken*   FindLightControl(int id);
+    RTokenVecIt  FindLightControlIt(LPCSTR name);
+    xr_rtoken*   FindLightControl(LPCSTR name)
     {
         RTokenVecIt it = FindLightControlIt(name);
         return it != lcontrols.end() ? &*it : 0;
     }
-    void AppendLightControl(LPCSTR name, u32* idx = 0);
-    void RemoveLightControl(LPCSTR name);
+    void                   AppendLightControl(LPCSTR name, u32* idx = 0);
+    void                   RemoveLightControl(LPCSTR name);
 
     virtual CCustomObject* CreateObject(LPVOID data, LPCSTR name);
 

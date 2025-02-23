@@ -4,12 +4,16 @@
 #include "resources\splash.h"
 
 XREPROPS_API extern bool bIsActorEditor;
-ECORE_API extern bool bIsLevelEditor;
+ECORE_API extern bool    bIsLevelEditor;
+ECORE_API extern bool    bIsParticleEditor;
+ECORE_API extern bool    bIsShaderEditor;
 
-int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
+int WINAPI               wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
-    bIsActorEditor = false;
-    bIsLevelEditor = false;
+    bIsActorEditor    = false;
+    bIsLevelEditor    = false;
+    bIsParticleEditor = false;
+    bIsShaderEditor   = true;
 
     if (strstr(GetCommandLine(), "-nosplash") == nullptr)
     {
@@ -21,23 +25,22 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     if (!IsDebuggerPresent())
         Debug._initialize(false);
 
+    splash::update_progress(5);
     const char* FSName = "fs.ltx";
     {
-        if (strstr(GetCommandLine(), "-soc_14") || strstr(GetCommandLine(), "-soc_10004"))
+        if (xrGameManager::GetGame() == EGame::SHOC)
         {
             FSName = "fs_soc.ltx";
+            Core._initialize("Shader_Editor_ShoC", ELogCallback, 1, FSName, true);
         }
-        else if (strstr(GetCommandLine(), "-soc"))
-        {
-            FSName = "fs_soc.ltx";
-        }
-        else if (strstr(GetCommandLine(), "-cs"))
+        else if (xrGameManager::GetGame() == EGame::CS)
         {
             FSName = "fs_cs.ltx";
+            Core._initialize("Shader_Editor_CS", ELogCallback, 1, FSName, true);
         }
+        else
+            Core._initialize("Shader_Editor_CoP", ELogCallback, 1, FSName, true);
     }
-    splash::update_progress(5);
-    Core._initialize("Shader_Editor", ELogCallback, 1, FSName, true);
 
     splash::update_progress(39);
     STools = xr_new<CShaderTool>();
@@ -54,7 +57,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
     splash::update_progress(29);
 
     splash::update_progress(1);
-    while (MainForm->Frame()) {}
+    while (MainForm->Frame())
+    {}
 
     xr_delete(MainForm);
     Core._destroy();

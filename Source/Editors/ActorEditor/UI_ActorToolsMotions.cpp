@@ -63,7 +63,9 @@ void EngineModel::FillMotionList(LPCSTR pref, ListItemsVec& items, int modeID)
                 for (; I != E; ++I)
                 {
                     shared_str tmp = PrepareKey(slot_pref.c_str(), *(*I).first);
-                    LHelper().CreateItem(items, tmp.c_str(), modeID, 0, *(void**)&MotionID((u16)k, I->second));
+
+                    MotionID LocalMotion((u16)k, I->second);
+                    LHelper().CreateItem(items, tmp.c_str(), modeID, 0, *(void**)&LocalMotion);
                 }
                 // fxs
                 I = SA->m_Motions[k].motions.fx()->begin();
@@ -71,27 +73,13 @@ void EngineModel::FillMotionList(LPCSTR pref, ListItemsVec& items, int modeID)
                 for (; I != E; ++I)
                 {
                     shared_str tmp = PrepareKey(slot_pref.c_str(), *(*I).first);
-                    LHelper().CreateItem(items, tmp.c_str(), modeID, 0, *(void**)&MotionID((u16)k, I->second));
+                    MotionID LocalMotion((u16)k, I->second);
+                    LHelper().CreateItem(items, tmp.c_str(), modeID, 0, *(void**)&LocalMotion);
                 }
             }
         }
     }
 }
-/*
-void EngineModel::PlayCycle(LPCSTR name, int part, u16 slot)
-{
-    MotionID D = PKinematicsAnimated(m_pVisual)->ID_Motion(name,slot);
-    if (D.valid())
-        PKinematicsAnimated(m_pVisual)->LL_PlayCycle((u16)part,D,TRUE,0,0);
-}
-
-void EngineModel::PlayFX(LPCSTR name, float power, u16 slot)
-{
-    MotionID D = PKinematicsAnimated(m_pVisual)->ID_Motion(name,slot);
-    if (D.valid())
-        PKinematicsAnimated(m_pVisual)->PlayFX(D,power);
-}
-*/
 
 void EngineModel::StopAnimation()
 {
@@ -385,6 +373,12 @@ bool CActorTools::SaveMotions(LPCSTR name, bool bSelOnly)
 
 void CActorTools::MakePreview()
 {
+    if (!VerifyMotionRefs())
+    {
+        MainForm->GetLeftBarForm()->SetRenderMode(false);
+        return;
+    }
+
     if (m_pEditObject)
     {
         CMemoryWriter F;
@@ -510,4 +504,30 @@ void CActorTools::RemoveMarksChannel(bool b12)
 
         ExecCommand(COMMAND_UPDATE_PROPERTIES);
     }
+}
+
+bool CActorTools::VerifyMotionRefs()
+{
+    bool result = true;
+
+    if (m_pEditObject)
+    {
+        if (m_pEditObject->IsSkeleton() && m_pEditObject->m_SMotionRefs.size())
+        {
+            xr_vector<shared_str>::iterator it, end;
+            it = m_pEditObject->m_SMotionRefs.begin();
+            end = m_pEditObject->m_SMotionRefs.end();
+
+            for (; it != end; it++)
+            {
+                string_path fn;
+                if (!FS.exist(fn, _game_meshes_, (*it).c_str(), ".omf"))
+                {
+                    ELog.Msg(mtError, "! Can't find motion file '%s'.", (*it).c_str());
+                    result = false;
+                }
+            }
+        }
+    }
+    return result;
 }

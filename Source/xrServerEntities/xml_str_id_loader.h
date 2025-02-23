@@ -4,7 +4,7 @@
 #include "ui/xrUIXmlParser.h"
 #else   // XRGAME_EXPORTS
 #include "xrUIXmlParser.h"
-#include "../XrEngine/object_broker.h"
+#include "../xrEngine/object_broker.h"
 #endif   // XRGAME_EXPORTS
 
 // T_ID    - уникальный текстовый идентификатор (аттрибут id в XML файле)
@@ -32,14 +32,17 @@ TEMPLATE_SPECIALIZATION
 class CXML_IdToIndex
 {
 public:
+
 private:
     static T_VECTOR* m_pItemDataVector;
+
 protected:
     // имена xml файлов (разделенных запятой) из которых
     // производить загрузку элементов
     static LPCSTR file_str;
     // имена тегов
     static LPCSTR tag_name;
+
 public:
     CXML_IdToIndex();
     virtual ~CXML_IdToIndex();

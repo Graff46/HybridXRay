@@ -48,7 +48,7 @@
 //		and CSE_ALifeHumanAbstract		appended with known_traders property
 //		and CSE_ALifeTask				appended with try count property
 //		and CSE_ALifePersonalTask		no more exists
-// 37 - ������� ����� ServerEntity �� CSE_ALifeItemWeapon, � CSE_ALifeItem
+// 37 - бинокль имеет ServerEntity не CSE_ALifeItemWeapon, а CSE_ALifeItem
 // 38 - CSE_ALifeHumanAbstract			appended with the equipment and weapon preferences
 // 39 - CSE_ALifeAnomalousZone			appended with the start power property
 // 40 - CSE_ALifeObjectPhysic			appended with activate flag
@@ -113,17 +113,21 @@
 // 94 - CSE_Abstract					client_data size increased
 // 95 - CSE_ALifeCreatureAbstract		appended with m_killer_id property
 // 96 - CSE_ALifeTraderAbstract			changed m_iCharacterProfile(int) to m_sCharacterProfile(shared_str)
-// 97 - CSE_ALifeItemPDA				changed m_info_portion(int) to m_info_portion(shared_str) +m_specific_character
-// +CSE_ALifeItemDocument m_wDoc (int-> shared_str) 98 - CSE_ALifeItemPDA				changed m_info_portion(int) to
-// m_info_portion(shared_str) +m_specific_character +CSE_ALifeItemDocument m_wDoc (int-> shared_str) 99 -
-// CSE_ALifeObjectClimable			inheritance changed CSE_Abstruct -> CSE_AlifeObject 100 - CSE_ALifeObjectClimable
-// inheritance changed CSE_AlifeObject -> CSE_AlifeDynamicObject 101 - CSE_ALifeCreaturePhantom		new class based on
-// CSE_ALifeCreatureAbstract 102 - CSE_ALifeAnomalousZone			appended m_owner_id 103 - CSE_ALifeCustomZone
-// appended m_owner_id,removed from CSE_ALifeAnomalousZone 104 - CSE_Visual						appended flags 105 -
-// CSE_ALifeTraderAbstract		added full name 106 - CSE_ALifeCustomZone			enabled\disabled time 107 -
-// CSE_ALifeCustomZone			enabled\disabled time extended 108 - CSE_ALifeTraderAbstract		removed property
-// m_tpEvents 109 - CSE_ALifeBaseMonster			added property m_spec_object 110 - CSE_ALifeHumanAbstract
-// removed a lot 111 - CSE_ALifeHumanStalker			removed demo mode
+// 97 - CSE_ALifeItemPDA				changed m_info_portion(int) to m_info_portion(shared_str) +m_specific_character +CSE_ALifeItemDocument m_wDoc (int-> shared_str)
+// 98 - CSE_ALifeItemPDA				changed m_info_portion(int) to m_info_portion(shared_str) +m_specific_character +CSE_ALifeItemDocument m_wDoc (int-> shared_str)
+// 99 - CSE_ALifeObjectClimable			inheritance changed CSE_Abstruct -> CSE_AlifeObject
+// 100 - CSE_ALifeObjectClimable		inheritance changed CSE_AlifeObject -> CSE_AlifeDynamicObject
+// 101 - CSE_ALifeCreaturePhantom		new class based on CSE_ALifeCreatureAbstract
+// 102 - CSE_ALifeAnomalousZone			appended m_owner_id
+// 103 - CSE_ALifeCustomZone			appended m_owner_id,removed from CSE_ALifeAnomalousZone
+// 104 - CSE_Visual						appended flags
+// 105 - CSE_ALifeTraderAbstract		added full name
+// 106 - CSE_ALifeCustomZone			enabled\disabled time
+// 107 - CSE_ALifeCustomZone			enabled\disabled time extended
+// 108 - CSE_ALifeTraderAbstract		removed property m_tpEvents
+// 109 - CSE_ALifeBaseMonster			added property m_spec_object
+// 110 - CSE_ALifeHumanAbstract			removed a lot
+// 111 - CSE_ALifeHumanStalker			removed demo mode
 // 112 - CSE_Abstract					removed all the spawn properties, sad but true
 //	   - CSE_SpawnGroup					is no more
 //	   - CSE_Event						is no more
@@ -162,6 +166,7 @@
 #define SPAWN_VERSION u16(128)
 
 SERVER_ENTITY_DECLARE_BEGIN(CSE_Shape, ISE_Shape)
+
 public:
 void cform_read(NET_Packet& P);
 void cform_write(NET_Packet& P);
@@ -218,9 +223,11 @@ virtual CSE_Abstract* cast_abstract()
 {
     return 0;
 }
+
 protected:
 virtual void data_load(NET_Packet& tNetPacket);
 virtual void data_save(NET_Packet& tNetPacket);
+
 public:
 SERVER_ENTITY_DECLARE_END
 add_to_type_list(CSE_PHSkeleton)
@@ -242,10 +249,10 @@ add_to_type_list(CSE_AbstractVisual)
 #endif
 
 /**
-SERVER_ENTITY_DECLARE_BEGIN(CSE_SpawnGroup,CSE_Abstract)
+SERVER_ENTITY_DECLARE_BEGIN(CSE_SpawnGroup, CSE_Abstract)
 public:
-                                    CSE_SpawnGroup	(LPCSTR caSection);
-    virtual							~CSE_SpawnGroup	();
+            CSE_SpawnGroup(LPCSTR caSection);
+    virtual ~CSE_SpawnGroup();
 SERVER_ENTITY_DECLARE_END
 add_to_type_list(CSE_SpawnGroup)
 #define script_type_list save_type_list(CSE_SpawnGroup)

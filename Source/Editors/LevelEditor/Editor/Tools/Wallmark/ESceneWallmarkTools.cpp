@@ -8,6 +8,7 @@
 #define WM_CHUNK_PARAMS           0x0003
 #define WM_CHUNK_ITEMS            0x0004
 #define WM_CHUNK_ITEMS2           0x0005
+//----------------------------------------------------
 
 #define MAX_WALLMARK_COUNT        500
 #define MAX_WALLMARK_VERTEX_COUNT 8192
@@ -193,7 +194,7 @@ void ESceneWallmarkTool::RefiningSlots()
 extern ECORE_API float r_ssaDISCARD;
 const int              MAX_R_VERTEX = 4096;
 
-void ESceneWallmarkTool::OnRender(int priority, bool strictB2F)
+void                   ESceneWallmarkTool::OnRender(int priority, bool strictB2F)
 {
     if (!m_Flags.is(flDrawWallmark))
         return;
@@ -212,7 +213,7 @@ void ESceneWallmarkTool::OnRender(int priority, bool strictB2F)
             RCache.set_xform_world(Fidentity);
             RCache.set_xform_project(EDevice->mProject);
 
-            float ssaCLIP = r_ssaDISCARD / 4;
+            float     ssaCLIP  = r_ssaDISCARD / 4;
 
             u32       w_offset = 0;
             FVF::LIT* w_verts  = (FVF::LIT*)RCache.Vertex.Lock(MAX_R_VERTEX, hGeom->vb_stride, w_offset);
@@ -488,7 +489,10 @@ void ESceneWallmarkTool::SaveStream(IWriter& F)
     inherited::SaveStream(F);
 
     F.open_chunk(WM_CHUNK_VERSION);
-    F.w_u16(WM_VERSION);
+    if (xrGameManager::GetGame() == EGame::SHOC)
+        F.w_u16(WM_VERSION - 1);
+    else
+        F.w_u16(WM_VERSION);
     F.close_chunk();
 
     F.open_chunk(WM_CHUNK_FLAGS);
@@ -586,7 +590,7 @@ void ESceneWallmarkTool::OnDeviceDestroy()
     hGeom.destroy();
 }
 
-void ESceneWallmarkTool::OnSynchronize() {}
+void                          ESceneWallmarkTool::OnSynchronize() {}
 
 // allocate
 ESceneWallmarkTool::wallmark* ESceneWallmarkTool::wm_allocate()
@@ -639,7 +643,7 @@ void ESceneWallmarkTool::RecurseTri(u32 t, Fmatrix& mView, wallmark& W)
     CDB::TRI* T = sml_collector.getT() + t;
     if (T->dummy)
         return;
-    T->dummy = 0xffffffff;
+    T->dummy        = 0xffffffff;
 
     // Some vars
     u32*     v_ids  = T->verts;

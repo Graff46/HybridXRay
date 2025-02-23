@@ -14,7 +14,7 @@
 
 poolSS<SAINode, 1024> g_ainode_pool;
 
-void* SAINode::operator new(std::size_t size)
+void*                 SAINode::operator new(std::size_t size)
 {
     return g_ainode_pool.create();
 }
@@ -104,9 +104,9 @@ void SAINode::SaveLTX(CInifile& ini, LPCSTR sect_name, ESceneAIMapTool* tools)
     tools->PackPosition(np, Pos, tools->m_AIBBox, tools->m_Params);
     string256 buff;
 
-    s16 x;
-    u16 y;
-    s16 z;
+    s16       x;
+    u16       y;
+    s16       z;
 
     sprintf(buff, "%i,%u,%i", np.x, np.y, np.z);
     ini.w_string(sect_name, "np", buff);
@@ -161,7 +161,7 @@ ESceneAIMapTool::ESceneAIMapTool(): ESceneToolBase(OBJCLASS_AIMAP)
     m_Flags.zero();
 
     m_AIBBox.invalidate();
-    //    m_Header.size_y				= m_Header.aabb.max.y-m_Header.aabb.min.y+EPS_L;
+    // m_Header.size_y = m_Header.aabb.max.y-m_Header.aabb.min.y+EPS_L;
     hash_Initialize();
     m_VisRadius    = 30.f;
     m_SmoothHeight = 0.5f;
@@ -175,12 +175,12 @@ void ESceneAIMapTool::Clear(bool bOnlyNodes)
 {
     inherited::Clear();
     hash_Clear();
-    for (SAINode* node : m_Nodes)
+    for (SAINode* node: m_Nodes)
         xr_delete(node);
     m_Nodes.clear_and_free();
     if (!bOnlyNodes)
     {
-        // m_SnapObjects.clear	();
+        // m_SnapObjects.clear();
         m_AIBBox.invalidate();
         ExecCommand(COMMAND_REFRESH_SNAP_OBJECTS);
         g_ainode_pool.clear();
@@ -199,7 +199,7 @@ void ESceneAIMapTool::CalculateNodesBBox(Fbox& bb)
 }
 
 extern BOOL ai_map_shown;
-void        ESceneAIMapTool::OnActivate()
+void ESceneAIMapTool::OnActivate()
 {
     inherited::OnActivate();
     ai_map_shown = TRUE;
@@ -237,10 +237,7 @@ void ESceneAIMapTool::DenumerateNodes()
     u32 cnt = m_Nodes.size();
     for (AINodeIt it = m_Nodes.begin(); it != m_Nodes.end(); it++)
     {
-        if (!((((u32)(*it)->n1 < cnt) || ((u32)(*it)->n1 == InvalidNode)) &&
-              (((u32)(*it)->n2 < cnt) || ((u32)(*it)->n2 == InvalidNode)) &&
-              (((u32)(*it)->n3 < cnt) || ((u32)(*it)->n3 == InvalidNode)) &&
-              (((u32)(*it)->n4 < cnt) || ((u32)(*it)->n4 == InvalidNode))))
+        if (!((((u32)(*it)->n1 < cnt) || ((u32)(*it)->n1 == InvalidNode)) && (((u32)(*it)->n2 < cnt) || ((u32)(*it)->n2 == InvalidNode)) && (((u32)(*it)->n3 < cnt) || ((u32)(*it)->n3 == InvalidNode)) && (((u32)(*it)->n4 < cnt) || ((u32)(*it)->n4 == InvalidNode))))
         {
             ELog.Msg(mtError, "! Node: has wrong link [%3.2f, %3.2f, %3.2f], {%d,%d,%d,%d}", VPUSH((*it)->Pos), (*it)->n1, (*it)->n2, (*it)->n3, (*it)->n4);
             (*it)->n1 = 0;
@@ -496,7 +493,7 @@ void ESceneAIMapTool::SelectNodesByLink(int link)
     // remove link to sel nodes
     for (AINodeIt it = m_Nodes.begin(); it != m_Nodes.end(); it++)
         if ((*it)->Links() == link)
-            //			if (!(*it)->flags.is(SAINode::flHide))
+            // if (!(*it)->flags.is(SAINode::flHide))
             (*it)->flags.set(SAINode::flSelected, TRUE);
     UI->RedrawScene();
 }
@@ -508,7 +505,7 @@ void ESceneAIMapTool::SelectObjects(bool flag)
         case estAIMapNode:
         {
             for (AINodeIt it = m_Nodes.begin(); it != m_Nodes.end(); it++)
-                //			if (!(*it)->flags.is(SAINode::flHide))
+                // if (!(*it)->flags.is(SAINode::flHide))
                 (*it)->flags.set(SAINode::flSelected, flag);
         }
         break;
@@ -569,7 +566,7 @@ void ESceneAIMapTool::InvertSelection()
         case estAIMapNode:
         {
             for (AINodeIt it = m_Nodes.begin(); it != m_Nodes.end(); it++)
-                //			if (!(*it)->flags.is(SAINode::flHide))
+                // if (!(*it)->flags.is(SAINode::flHide))
                 (*it)->flags.invert(SAINode::flSelected);
         }
         break;
@@ -604,6 +601,9 @@ void ESceneAIMapTool::FillProp(LPCSTR pref, PropItemVec& items)
     PHelper().CreateU32(items, PrepareKey(pref, "Params\\Brush Size"), &m_BrushSize, 1, 100);
     PHelper().CreateFloat(items, PrepareKey(pref, "Params\\Can Up"), &m_Params.fCanUP, 0.f, 10.f);
     PHelper().CreateFloat(items, PrepareKey(pref, "Params\\Can Down"), &m_Params.fCanDOWN, 0.f, 10.f);
+
+    FloatValue* V = PHelper().CreateFloat(items, PrepareKey(pref, "Params\\Patch Size"), &m_Params.fPatchSize, 0.1f, 1.0f);
+    V->OnChangeEvent.bind(this, &ESceneAIMapTool::OnPatchSizeChanged);
 }
 
 void ESceneAIMapTool::GetBBox(Fbox& bb, bool bSelOnly)
@@ -628,4 +628,9 @@ void ESceneAIMapTool::GetBBox(Fbox& bb, bool bSelOnly)
         }
         break;
     }
+}
+
+void ESceneAIMapTool::OnPatchSizeChanged(PropValue*)
+{
+    ELog.DlgMsg(mtInformation, "Patch size was changed, regenerate AI-Map");
 }

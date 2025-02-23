@@ -1,10 +1,10 @@
 ﻿#pragma once
-class UITopBarForm: public XrUI
+class UITopBarForm: public xrUI
 {
 public:
-	UITopBarForm();
-	virtual ~UITopBarForm();
-	virtual void Draw();
+    UITopBarForm();
+    virtual ~UITopBarForm();
+    virtual void Draw();
 
 private:
     void        ClickUndo();

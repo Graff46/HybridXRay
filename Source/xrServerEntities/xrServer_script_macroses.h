@@ -1,15 +1,15 @@
 ﻿////////////////////////////////////////////////////////////////////////////
-//	Module 		: xrServer_script_macroses.cpp
-//	Created 	: 24.06.2004
-//  Modified 	: 24.06.2004
-//	Author		: Dmitriy Iassenev
-//	Description : Server script macroses
+// Module      : xrServer_script_macroses.cpp
+// Created     : 24.06.2004
+// Modified    : 24.06.2004
+// Author      : Dmitriy Iassenev
+// Description : Server script macroses
 ////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
 #include "script_export_macroses.h"
-#include "..\Editors\Public\xrEProps.h"
+#include "../Editors/Public/xrEProps.h"
 #include "ai_space.h"
 #include "script_engine.h"
 #include "luabind/error.hpp"
@@ -28,15 +28,15 @@ class CALifeSmartTerrainTask;
 #define INHERIT_PURE
 
 // #ifndef USE_WRITER_READER
-// #	define INHERIT_PURE \
-//	DEFINE_LUA_WRAPPER_METHOD_R2P1_V1	(save,			NET_Packet)\
-//	DEFINE_LUA_WRAPPER_METHOD_R2P1_V1	(load,			NET_Packet)
+// #define INHERIT_PURE \
+// DEFINE_LUA_WRAPPER_METHOD_R2P1_V1(save, NET_Packet)\
+// DEFINE_LUA_WRAPPER_METHOD_R2P1_V1(load, NET_Packet)
 // #else
-// #	define INHERIT_PURE \
-//	DEFINE_LUA_WRAPPER_METHOD_R2P1_V1	(save,			NET_Packet)\
-//	DEFINE_LUA_WRAPPER_METHOD_R2P1_V1	(load,			NET_Packet)\
-//	DEFINE_LUA_WRAPPER_METHOD_R2P1_V1	(save,			IWriter)\
-//	DEFINE_LUA_WRAPPER_METHOD_R2P1_V1	(load,			IReader)
+// # define INHERIT_PURE \
+// DEFINE_LUA_WRAPPER_METHOD_R2P1_V1(save, NET_Packet)\
+// DEFINE_LUA_WRAPPER_METHOD_R2P1_V1(load, NET_Packet)\
+// DEFINE_LUA_WRAPPER_METHOD_R2P1_V1(save, IWriter)\
+// DEFINE_LUA_WRAPPER_METHOD_R2P1_V1(load, IReader)
 // #endif
 
 #ifndef XRGAME_EXPORTS
@@ -203,17 +203,17 @@ template<typename T> struct CWrapperAbstractItem: public T, public luabind::wrap
 #define luabind_virtual_pure(a, b) .def(constructor<LPCSTR>())
 
 // #ifndef USE_WRITER_READER
-// #	define luabind_virtual_pure(a,b) \
-//		.def(	constructor<LPCSTR>()) \
-//		DEFINE_LUABIND_VIRTUAL_FUNCTION_EXPLICIT_1(a,b,save,void,NET_Packet&,NET_Packet*) \
-//		DEFINE_LUABIND_VIRTUAL_FUNCTION_EXPLICIT_1(a,b,load,void,NET_Packet&,NET_Packet*)
+// #define luabind_virtual_pure(a,b) \
+// .def(constructor<LPCSTR>()) \
+// DEFINE_LUABIND_VIRTUAL_FUNCTION_EXPLICIT_1(a,b,save,void,NET_Packet&,NET_Packet*) \
+// DEFINE_LUABIND_VIRTUAL_FUNCTION_EXPLICIT_1(a,b,load,void,NET_Packet&,NET_Packet*)
 // #else
-// #	define luabind_virtual_pure(a,b) \
-//		.def(	constructor<LPCSTR>()) \
-//		DEFINE_LUABIND_VIRTUAL_FUNCTION_EXPLICIT_1(a,b,save,void,NET_Packet&,NET_Packet*) \
-//		DEFINE_LUABIND_VIRTUAL_FUNCTION_EXPLICIT_1(a,b,load,void,NET_Packet&,NET_Packet*) \
-//		DEFINE_LUABIND_VIRTUAL_FUNCTION_EXPLICIT_1(a,b,save,void,IWriter&,IWriter*) \
-//		DEFINE_LUABIND_VIRTUAL_FUNCTION_EXPLICIT_1(a,b,load,void,IReader&,IReader*)
+// #define luabind_virtual_pure(a,b) \
+// .def(constructor<LPCSTR>()) \
+// DEFINE_LUABIND_VIRTUAL_FUNCTION_EXPLICIT_1(a,b,save,void,NET_Packet&,NET_Packet*) \
+// DEFINE_LUABIND_VIRTUAL_FUNCTION_EXPLICIT_1(a,b,load,void,NET_Packet&,NET_Packet*) \
+// DEFINE_LUABIND_VIRTUAL_FUNCTION_EXPLICIT_1(a,b,save,void,IWriter&,IWriter*) \
+// DEFINE_LUABIND_VIRTUAL_FUNCTION_EXPLICIT_1(a,b,load,void,IReader&,IReader*)
 // #endif
 
 #ifndef XRGAME_EXPORTS
@@ -286,28 +286,27 @@ template<typename T> struct CWrapperAbstractItem: public T, public luabind::wrap
 #define luabind_virtual_online_offline_group(a, b) DEFINE_LUABIND_VIRTUAL_FUNCTION(a, b, update)
 #endif   // #ifdef XRGAME_EXPORTS
 
-#define luabind_virtual_monster(a, b)      DEFINE_LUABIND_VIRTUAL_FUNCTION(a, b, update)
+#define luabind_virtual_monster(a, b)            DEFINE_LUABIND_VIRTUAL_FUNCTION(a, b, update)
 
-#define luabind_virtual_item(a, b)         DEFINE_LUABIND_VIRTUAL_FUNCTION(a, b, bfUseful)
+#define luabind_virtual_item(a, b)               DEFINE_LUABIND_VIRTUAL_FUNCTION(a, b, bfUseful)
 
-#define luabind_virtual_Pure(a, b)         luabind_virtual_pure(a, b)
+#define luabind_virtual_Pure(a, b)               luabind_virtual_pure(a, b)
 
-#define luabind_virtual_Abstract(a, b)     luabind_virtual_Pure(a, b) luabind_virtual_abstract(a, b)
+#define luabind_virtual_Abstract(a, b)           luabind_virtual_Pure(a, b) luabind_virtual_abstract(a, b)
 
-#define luabind_virtual_Alife(a, b)        luabind_virtual_Abstract(a, b) luabind_virtual_alife(a, b)
+#define luabind_virtual_Alife(a, b)              luabind_virtual_Abstract(a, b) luabind_virtual_alife(a, b)
 
-#define luabind_virtual_DynamicAlife(a, b) luabind_virtual_Alife(a, b) luabind_virtual_dynamic_alife(a, b)
+#define luabind_virtual_DynamicAlife(a, b)       luabind_virtual_Alife(a, b) luabind_virtual_dynamic_alife(a, b)
 
-#define luabind_virtual_Creature(a, b)     luabind_virtual_DynamicAlife(a, b) luabind_virtual_creature(a, b)
+#define luabind_virtual_Creature(a, b)           luabind_virtual_DynamicAlife(a, b) luabind_virtual_creature(a, b)
 
-#define luabind_virtual_Zone(a, b)         luabind_virtual_DynamicAlife(a, b) luabind_virtual_zone(a, b)
+#define luabind_virtual_Zone(a, b)               luabind_virtual_DynamicAlife(a, b) luabind_virtual_zone(a, b)
 
-#define luabind_virtual_OnlineOfflineGroup(a, b) \
-    luabind_virtual_DynamicAlife(a, b) luabind_virtual_online_offline_group(a, b)
+#define luabind_virtual_OnlineOfflineGroup(a, b) luabind_virtual_DynamicAlife(a, b) luabind_virtual_online_offline_group(a, b)
 
-#define luabind_virtual_Monster(a, b) luabind_virtual_Creature(a, b) luabind_virtual_monster(a, b)
+#define luabind_virtual_Monster(a, b)            luabind_virtual_Creature(a, b) luabind_virtual_monster(a, b)
 
-#define luabind_virtual_Item(a, b)    luabind_virtual_DynamicAlife(a, b) luabind_virtual_item(a, b)
+#define luabind_virtual_Item(a, b)               luabind_virtual_DynamicAlife(a, b) luabind_virtual_item(a, b)
 
 //////////////////////////////////////////////////////////////////////////
 // 0

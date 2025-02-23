@@ -35,10 +35,10 @@ void UIMainMenuForm::Draw()
             if (ImGui::IsItemHovered())
                 ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
             ImGui::Separator();
-            
+
             if (ImGui::BeginMenu("Open Recent"_RU >> u8"Недавние файлы", ""))
             {
-                for (auto& str : EPrefs->scene_recent_list)
+                for (auto& str: EPrefs->scene_recent_list)
                 {
                     if (ImGui::MenuItem(str.c_str(), ""))
                     {
@@ -121,7 +121,10 @@ void UIMainMenuForm::Draw()
         }
         if (ImGui::IsItemHovered())
             ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+        ImGui::SameLine();
         ImGui::Separator();
+        ImGui::Separator();
+        ImGui::SameLine();
         if (ImGui::BeginMenu("Preview Object"_RU >> u8"Добавить в сцену"))
         {
             if (ImGui::MenuItem("Custom..."_RU >> u8"Выбрать...", ""))
@@ -147,7 +150,10 @@ void UIMainMenuForm::Draw()
         }
         if (ImGui::IsItemHovered())
             ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+        ImGui::SameLine();
         ImGui::Separator();
+        ImGui::Separator();
+        ImGui::SameLine();
         if (ImGui::BeginMenu("Editors"_RU >> u8"Эдиторы"))
         {
             if (ImGui::BeginMenu("Image"_RU >> u8"Текстуры"))
@@ -210,8 +216,10 @@ void UIMainMenuForm::Draw()
         }
         if (ImGui::IsItemHovered())
             ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
-
+        ImGui::SameLine();
         ImGui::Separator();
+        ImGui::Separator();
+        ImGui::SameLine();
         if (ImGui::BeginMenu("Options"_RU >> u8"Опции"))
         {
             if (ImGui::BeginMenu("Render"_RU >> u8"Экран"))
@@ -257,9 +265,7 @@ void UIMainMenuForm::Draw()
                     ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
                 if (ImGui::BeginMenu("Fill Mode"_RU >> u8"Режим отображения"))
                 {
-                    bool selected[3] = {
-                        EDevice->dwFillMode == D3DFILL_POINT, EDevice->dwFillMode == D3DFILL_WIREFRAME,
-                        EDevice->dwFillMode == D3DFILL_SOLID};
+                    bool selected[3] = {EDevice->dwFillMode == D3DFILL_POINT, EDevice->dwFillMode == D3DFILL_WIREFRAME, EDevice->dwFillMode == D3DFILL_SOLID};
                     if (ImGui::MenuItem("Point"_RU >> u8"Точки", "", &selected[0]))
                     {
                         EDevice->dwFillMode = D3DFILL_POINT;
@@ -436,8 +442,13 @@ void UIMainMenuForm::Draw()
         }
         if (ImGui::IsItemHovered())
             ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+        ImGui::SameLine();
+        ImGui::Separator();
+        ImGui::Separator();
+        ImGui::SameLine();
         if (ImGui::BeginMenu("Windows"_RU >> u8"Окна"))
         {
+            // Лог
             {
                 bool selected = AllowLogCommands();
 
@@ -448,15 +459,28 @@ void UIMainMenuForm::Draw()
                 if (ImGui::IsItemHovered())
                     ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
             }
+            // Окно "Demo ImGui Helper"
             {
                 if (ImGui::MenuItem("Demo ImGui Helper"_RU >> u8"Демонстрационный помощник ImGui", "", bDemoImGui))
                     bDemoImGui = !bDemoImGui;
                 if (ImGui::IsItemHovered())
                 {
                     ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
-                    ImGui::SetTooltip("Opens the ImGui Demo Helper, where you can get acquainted with ImGui functionality, visually see demo examples, etc. and so on.."_RU >>
-                                    u8"Открывает Демонстрационный Хелпер по ImGui, где можно ознакомиться с функционалом ImGui, наглядно посмотреть демонстрационные примеры и т.д. и т.п..");
+                    ImGui::SetTooltip("Opens the ImGui Demo Helper, where you can get acquainted with ImGui functionality, visually see demo examples, etc. and so on.."_RU >> u8"Открывает Демонстрационный Хелпер по ImGui, где можно ознакомиться с функционалом ImGui, наглядно посмотреть демонстрационные примеры и т.д. и т.п..");
                 }
+            }
+            ImGui::SameLine();
+            ImGui::Separator();
+            ImGui::Separator();
+            ImGui::SameLine();
+            // About
+            {
+                if (ImGui::MenuItem("About Editor"_RU >> u8"О Редакторе", ""))
+                {
+                    ExecCommand(COMMAND_ABOUT_EDITOR);
+                }
+                if (ImGui::IsItemHovered())
+                    ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
             }
             ImGui::EndMenu();
         }
@@ -464,7 +488,9 @@ void UIMainMenuForm::Draw()
             ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
         ImGui::SameLine();
         ImGui::Separator();
+        ImGui::SameLine(0, 5);
         ImGui::Separator();
+        ImGui::SameLine(0, 5);
         ImGui::Separator();
         ImGui::SameLine();
         if (ImGui::BeginMenu("Language: EN/RU"_RU >> u8"Язык: EN/RU"))
@@ -487,6 +513,7 @@ void UIMainMenuForm::Draw()
         }
         if (ImGui::IsItemHovered())
             ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+        ImGui::Separator();
         ImGui::EndMainMenuBar();
     }
 }

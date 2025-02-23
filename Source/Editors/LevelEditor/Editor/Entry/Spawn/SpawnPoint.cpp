@@ -1,41 +1,44 @@
 ﻿#include "stdafx.h"
 
-#define SPAWNPOINT_CHUNK_VERSION 0xE411
-#define SPAWNPOINT_CHUNK_POSITION 0xE412
-#define SPAWNPOINT_CHUNK_RPOINT 0xE413
-#define SPAWNPOINT_CHUNK_DIRECTION 0xE414
-#define SPAWNPOINT_CHUNK_SQUADID 0xE415
-#define SPAWNPOINT_CHUNK_GROUPID 0xE416
-#define SPAWNPOINT_CHUNK_TYPE 0xE417
-#define SPAWNPOINT_CHUNK_FLAGS 0xE418
+#define SPAWNPOINT_CHUNK_VERSION      0xE411
+#define SPAWNPOINT_CHUNK_POSITION     0xE412
+#define SPAWNPOINT_CHUNK_RPOINT       0xE413
+#define SPAWNPOINT_CHUNK_DIRECTION    0xE414
+#define SPAWNPOINT_CHUNK_SQUADID      0xE415
+#define SPAWNPOINT_CHUNK_GROUPID      0xE416
+#define SPAWNPOINT_CHUNK_TYPE         0xE417
+#define SPAWNPOINT_CHUNK_FLAGS        0xE418
 
-#define SPAWNPOINT_CHUNK_ENTITYREF 0xE419
-#define SPAWNPOINT_CHUNK_SPAWNDATA 0xE420
+#define SPAWNPOINT_CHUNK_ENTITYREF    0xE419
+#define SPAWNPOINT_CHUNK_SPAWNDATA    0xE420
 
 #define SPAWNPOINT_CHUNK_ATTACHED_OBJ 0xE421
 
-#define SPAWNPOINT_CHUNK_ENVMOD 0xE422
-#define SPAWNPOINT_CHUNK_ENVMOD2 0xE423
-#define SPAWNPOINT_CHUNK_ENVMOD3 0xE424
-#define SPAWNPOINT_CHUNK_FLAGS 0xE425
+#define SPAWNPOINT_CHUNK_ENVMOD       0xE422
+#define SPAWNPOINT_CHUNK_ENVMOD2      0xE423
+#define SPAWNPOINT_CHUNK_ENVMOD3      0xE424
+#define SPAWNPOINT_CHUNK_FLAGS        0xE425
 
-const float RPOINT_SIZE = 0.5f;
-const float ENVMOD_SIZE = 0.25f;
-const int   MAX_TEAM    = 32;
+const float RPOINT_SIZE         = 0.5f;
+const float ENVMOD_SIZE         = 0.25f;
+const int   MAX_TEAM            = 32;
 
-const u32 RP_COLORS[MAX_TEAM] = {0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0x00ffff, 0xff00ff, 0xCD5C5C, 0xF08080,
-                                 0xDC143C, 0xB22222, 0x8B0000, 0xFFC0CB, 0xFF69B4, 0xC71585, 0xFF7F50, 0xFF8C00,
-                                 0xFFD700, 0xFFFFE0, 0xFFE4B5, 0xF0E68C, 0xBDB76B, 0xE6E6FA, 0xDDA0DD, 0xEE82EE,
-                                 0xFF00FF, 0xBA55D3, 0x9400D3, 0x4B0082, 0xB8860B, 0x800000, 0x808080, 0x000000};
+const u32   RP_COLORS[MAX_TEAM] =
+{
+    0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0x00ffff, 0xff00ff, 0xCD5C5C, 0xF08080,
+    0xDC143C, 0xB22222, 0x8B0000, 0xFFC0CB, 0xFF69B4, 0xC71585, 0xFF7F50, 0xFF8C00,
+    0xFFD700, 0xFFFFE0, 0xFFE4B5, 0xF0E68C, 0xBDB76B, 0xE6E6FA, 0xDDA0DD, 0xEE82EE,
+    0xFF00FF, 0xBA55D3, 0x9400D3, 0x4B0082, 0xB8860B, 0x800000, 0x808080, 0x000000
+};
 
+//------------------------------------------------------------------------------
 // CLE_Visual
+//------------------------------------------------------------------------------
 CLE_Visual::CLE_Visual(ISE_Visual* src)
 {
     source = src;
     visual = 0;
 }
-
-bool CLE_Visual::g_tmp_lock = false;
 
 CLE_Visual::~CLE_Visual()
 {
@@ -61,23 +64,23 @@ void CLE_Visual::OnDrawUI()
 void CLE_Visual::OnChangeVisual()
 {
     ::Render->model_Delete(visual, TRUE);
+    static bool NoVisual = false;
     if (source->visual_name.size())
     {
         visual = ::Render->model_Create(source->visual_name.c_str());
 
-        if (NULL == visual && !g_tmp_lock)
+        if (NULL == visual)
         {
-            xr_string _msg = "Model [" + xr_string(source->visual_name.c_str()) + "] not found. Do you want to select it from library?";
-            int    mr       = ELog.DlgMsg(mtConfirmation, mbYes | mbNo, _msg.c_str());
-            LPCSTR _new_val = 0;
-            g_tmp_lock      = true;
-            if (mr == mrYes)
-            {
-                UIChooseForm::SelectItem(smVisual, 1);
-                EDevice->seqDrawUI.Add(this);
-            }
-
-            g_tmp_lock = false;
+            const xr_string& msg = "! Model [" + xr_string(source->visual_name.c_str()) + "] not found!";
+            ELog.Msg(mtError, msg.c_str());
+        }
+        if (NoVisual)
+            return;
+        if (NULL == visual)
+        {
+            const xr_string & msgWindow = "There are missing dynamic ogf models, please pay attention to the log!\n\n   All missing models will be indicated in the log file!";
+            ELog.DlgMsg(mtError, msgWindow.c_str());
+            NoVisual = true;
         }
         PlayAnimationFirstFrame();
     }
@@ -86,8 +89,6 @@ void CLE_Visual::OnChangeVisual()
 
 void CLE_Visual::PlayAnimation()
 {
-    if (g_tmp_lock)
-        return;
     // play motion if skeleton
     StopAllAnimations();
 
@@ -105,8 +106,6 @@ void CLE_Visual::PlayAnimation()
 
 void CLE_Visual::StopAllAnimations()
 {
-    if (g_tmp_lock)
-        return;
     // play motion if skeleton
     CKinematicsAnimated* KA = PKinematicsAnimated(visual);
     if (KA)
@@ -118,8 +117,6 @@ void CLE_Visual::StopAllAnimations()
 
 void CLE_Visual::PlayAnimationFirstFrame()
 {
-    if (g_tmp_lock)
-        return;
     // play motion if skeleton
 
     StopAllAnimations();
@@ -152,8 +149,6 @@ struct SetBlendLastFrameCB: public IterateBlendsCallback
 
 void CLE_Visual::PlayAnimationLastFrame()
 {
-    if (g_tmp_lock)
-        return;
     // play motion if skeleton
 
     StopAllAnimations();
@@ -183,9 +178,6 @@ struct TogglelendCB: public IterateBlendsCallback
 
 void CLE_Visual::PauseAnimation()
 {
-    if (g_tmp_lock)
-        return;
-
     CKinematicsAnimated* KA = PKinematicsAnimated(visual);
     IKinematics*         K  = PKinematics(visual);
 
@@ -196,7 +188,9 @@ void CLE_Visual::PauseAnimation()
         K->CalculateBones();
 }
 
+//------------------------------------------------------------------------------
 // CLE_Motion
+//------------------------------------------------------------------------------
 CSpawnPoint::CLE_Motion::CLE_Motion(ISE_Motion* src)
 {
     source   = src;
@@ -220,9 +214,17 @@ void CSpawnPoint::CLE_Motion::PlayMotion()
     if (animator)
         animator->Play(true);
 }
+//------------------------------------------------------------------------------
 // SpawnData
+//------------------------------------------------------------------------------
 void CSpawnPoint::SSpawnData::Create(LPCSTR _entity_ref)
 {
+    if (!pSettings->section_exist(_entity_ref))
+    {
+        ELog.Msg(mtError, "! Section doesn't exist: %s", _entity_ref);
+        return;
+    }
+
     m_Data = g_SEFactoryManager->create_entity(_entity_ref);
     if (m_Data)
     {
@@ -323,9 +325,12 @@ void CSpawnPoint::SSpawnData::SaveStream(IWriter& F)
     F.w_stringZ(m_Data->name());
     F.close_chunk();
 
-    F.open_chunk(SPAWNPOINT_CHUNK_FLAGS);
-    F.w_u8(m_flags.get());
-    F.close_chunk();
+    if (xrGameManager::GetGame() != EGame::SHOC)
+    {
+        F.open_chunk(SPAWNPOINT_CHUNK_FLAGS);
+        F.w_u8(m_flags.get());
+        F.close_chunk();
+    }
 
     F.open_chunk(SPAWNPOINT_CHUNK_SPAWNDATA);
     NET_Packet Packet;
@@ -349,12 +354,13 @@ bool CSpawnPoint::SSpawnData::LoadStream(IReader& F)
     Packet.B.count = F.r_u32();
     F.r(Packet.B.data, Packet.B.count);
     Create(temp);
-    if (Valid())
-        if (!m_Data->Spawn_Read(Packet))
-            Destroy();
+
+    if (Valid() && !m_Data->Spawn_Read(Packet))
+        Destroy();
 
     return Valid();
 }
+
 bool CSpawnPoint::SSpawnData::ExportGame(SExportStreams* F, CSpawnPoint* owner)
 {
     // set params
@@ -364,12 +370,14 @@ bool CSpawnPoint::SSpawnData::ExportGame(SExportStreams* F, CSpawnPoint* owner)
 
     // export cform (if needed)
     ISE_Shape* cform = m_Data->shape();
+
     // SHAPE
     if (cform && !(owner->m_AttachedObject && (owner->m_AttachedObject->FClassID == OBJCLASS_SHAPE)))
     {
         ELog.DlgMsg(mtError, "& Spawn Point: '%s' must contain attached shape.", owner->GetName());
         return false;
     }
+
     if (cform)
     {
         CEditShape* shape = dynamic_cast<CEditShape*>(owner->m_AttachedObject);
@@ -411,7 +419,6 @@ void CSpawnPoint::SSpawnData::PreExportSpawn(CSpawnPoint* owner)
     if (cform && !(owner->m_AttachedObject && (owner->m_AttachedObject->FClassID == OBJCLASS_SHAPE)))
     {
         ELog.DlgMsg(mtError, "& Spawn Point: '%s' must contain attached shape.", owner->GetName());
-        ;
     }
     if (cform)
     {
@@ -428,34 +435,53 @@ void CSpawnPoint::SSpawnData::OnAnimControlClick(ButtonValue* value, bool& bModi
 {
     ButtonValue* B = dynamic_cast<ButtonValue*>(value);
     R_ASSERT(B);
-    switch (B->btn_num)
+    if (m_Visual)
     {
-            //		"First,Play,Pause,Stop,Last",
-        case 0:   // first
+        switch (B->btn_num)
         {
-            m_Visual->PlayAnimationFirstFrame();
+            // "First,Play,Pause,Stop,Last",
+            case 0:   // first
+                m_Visual->PlayAnimationFirstFrame();
+            break;
+            case 1:   // play
+                m_Visual->PlayAnimation();
+            break;
+            case 2:   // pause
+                m_Visual->PauseAnimation();
+            break;
+            case 3:   // stop
+                m_Visual->StopAllAnimations();
+            break;
+            case 4:   // last
+                m_Visual->PlayAnimationLastFrame();
+            break;
         }
-        break;
-        case 1:   // play
+    }
+    else
+    {
+        xr_vector<CLE_Visual*>::iterator v_it, v_end;
+        for (v_it = m_VisualHelpers.begin(), v_end = m_VisualHelpers.end(); v_it != v_end; v_it++)
         {
-            m_Visual->PlayAnimation();
+            CLE_Visual* V = *v_it;
+            switch (B->btn_num)
+            {
+                case 0:
+                    V->PlayAnimationFirstFrame();
+                break;   // first
+                case 1:
+                    V->PlayAnimation();
+                break;   // play
+                case 2:
+                    V->PauseAnimation();
+                break;   // pause
+                case 3:
+                    V->StopAllAnimations();
+                break;   // stop
+                case 4:
+                    V->PlayAnimationLastFrame();
+                break;   // last
+            }
         }
-        break;
-        case 2:   // pause
-        {
-            m_Visual->PauseAnimation();
-        }
-        break;
-        case 3:   // stop
-        {
-            m_Visual->StopAllAnimations();
-        }
-        break;
-        case 4:   // last
-        {
-            m_Visual->PlayAnimationLastFrame();
-        }
-        break;
     }
 }
 
@@ -466,7 +492,7 @@ void CSpawnPoint::SSpawnData::FillProp(LPCSTR pref, PropItemVec& items)
     if (Scene->m_LevelOp.m_mapUsage.MatchType(eGameIDDeathmatch | eGameIDTeamDeathmatch | eGameIDArtefactHunt | eGameIDCaptureTheArtefact))
         PHelper().CreateFlag8(items, PrepareKey(pref, "MP respawn"), &m_flags, eSDTypeRespawn);
 
-    if (m_Visual)
+    if (m_Visual || m_VisualHelpers.size())
     {
         ButtonValue* BV = PHelper().CreateButton(items, PrepareKey(pref, m_Data->name(), "Model\\AnimationControl"), "|<<,Play,Pause,Stop,>>|", 0);
         BV->OnBtnClickEvent.bind(this, &CSpawnPoint::SSpawnData::OnAnimControlClick);
@@ -564,6 +590,7 @@ void CSpawnPoint::SSpawnData::OnFrame()
     // reset editor flags
     m_Data->m_editor_flags.zero();
 }
+//------------------------------------------------------------------------------
 CSpawnPoint::CSpawnPoint(LPVOID data, LPCSTR name): CCustomObject(data, name), m_SpawnData(this)
 {
     m_rpProfile = "";
@@ -574,46 +601,53 @@ CSpawnPoint::CSpawnPoint(LPVOID data, LPCSTR name): CCustomObject(data, name), m
 void CSpawnPoint::Construct(LPVOID data)
 {
     FClassID         = OBJCLASS_SPAWNPOINT;
-    m_AttachedObject = 0;
-    if (data)
+    m_AttachedObject = nullptr;
+
+    if (!data)
     {
-        if (strcmp(LPSTR(data), RPOINT_CHOOSE_NAME) == 0)
+        SetValid(false);
+        return;
+    }
+
+    if (!strcmp(LPSTR(data), RPOINT_CHOOSE_NAME))
+    {
+        m_Type    = ptRPoint;
+        m_RP_Type = rptActorSpawn;
+
+        if (xrGameManager::GetGame() == EGame::SHOC)
         {
-            m_Type    = ptRPoint;
-            m_RP_Type = rptActorSpawn;
-            m_GameType.SetDefaults();
-            m_RP_TeamID = 1;
-        }
-        else if (strcmp(LPSTR(data), ENVMOD_CHOOSE_NAME) == 0)
-        {
-            m_Type            = ptEnvMod;
-            m_EM_Radius       = 10.f;
-            m_EM_Power        = 1.f;
-            m_EM_ViewDist     = 300.f;
-            m_EM_FogColor     = 0x00808080;
-            m_EM_FogDensity   = 1.f;
-            m_EM_AmbientColor = 0x00000000;
-            m_EM_SkyColor     = 0x00FFFFFF;
-            m_EM_HemiColor    = 0x00FFFFFF;
+            m_GameType.m_GameType.assign(static_cast<u16>(rpgtGameAny));
+            m_RP_TeamID = 0;
         }
         else
         {
-            CreateSpawnData(LPCSTR(data));
-            if (!m_SpawnData.Valid())
-            {
-                SetValid(false);
-            }
-            else
-            {
-                m_Type = ptSpawnPoint;
-            }
+            m_GameType.SetDefaults();
+            m_RP_TeamID = 1;
         }
+    }
+    else if (!strcmp(LPSTR(data), ENVMOD_CHOOSE_NAME))
+    {
+        m_Type            = ptEnvMod;
+        m_EM_Radius       = 10.f;
+        m_EM_Power        = 1.f;
+        m_EM_ViewDist     = 300.f;
+        m_EM_FogColor     = 0x00808080;
+        m_EM_FogDensity   = 1.f;
+        m_EM_AmbientColor = 0x00000000;
+        m_EM_SkyColor     = 0x00FFFFFF;
+        m_EM_HemiColor    = 0x00FFFFFF;
     }
     else
     {
-        SetValid(false);
+        CreateSpawnData(LPCSTR(data));
+
+        if (!m_SpawnData.Valid())
+            SetValid(false);
+        else
+            m_Type = ptSpawnPoint;
     }
 }
+
 void CSpawnPoint::OnSceneRemove()
 {
     DeletePhysicsShell();
@@ -675,10 +709,10 @@ bool CSpawnPoint::AttachObject(CCustomObject* obj)
         {
             case OBJCLASS_SHAPE:
                 bAllowed = !!m_SpawnData.m_Data->shape();
-                break;
-                //        case OBJCLASS_SCENEOBJECT:
-                //	    	bAllowed = !!dynamic_cast<xrSE_Visualed*>(m_SpawnData.m_Data);
-                //        break;
+            break;
+            // case OBJCLASS_SCENEOBJECT:
+            //     bAllowed = !!dynamic_cast<xrSE_Visualed*>(m_SpawnData.m_Data);
+            // break;
         }
     }
     //
@@ -723,6 +757,7 @@ bool CSpawnPoint::CreateSpawnData(LPCSTR entity_ref)
         m_Type = ptSpawnPoint;
     return m_SpawnData.Valid();
 }
+//----------------------------------------------------
 
 bool CSpawnPoint::GetBox(Fbox& box)
 {
@@ -740,7 +775,7 @@ bool CSpawnPoint::GetBox(Fbox& box)
         case ptEnvMod:
             box.set(GetPosition(), GetPosition());
             box.grow(Selected() ? m_EM_Radius : ENVMOD_SIZE);
-            break;
+        break;
         case ptSpawnPoint:
             if (m_SpawnData.Valid())
             {
@@ -808,7 +843,7 @@ bool CSpawnPoint::GetBox(Fbox& box)
                 box.max.y += RPOINT_SIZE * 2.f;
                 box.max.z += RPOINT_SIZE;
             }
-            break;
+        break;
         default:
             NODEFAULT;
     }
@@ -850,7 +885,7 @@ void CSpawnPoint::RenderSimBox()
     m.scale(Fvector().mul(s, 2));
     m.c.set(c);
 
-    //     B.mulA_43			(_Transform());
+    // B.mulA_43(_Transform());
     RCache.set_xform_world(m);
     u32 clr = 0x06005000;
     DU_impl.DrawIdentBox(true, false, clr, clr);
@@ -947,8 +982,7 @@ void CSpawnPoint::Render(int priority, bool strictB2F)
                 Fvector D;
                 D.sub(EDevice->vCameraPosition, GetPosition());
                 float dist = D.normalize_magn();
-                if (!st->m_Flags.is(ESceneSpawnTool::flPickSpawnType) ||
-                    !Scene->RayPickObject(dist, GetPosition(), D, OBJCLASS_SCENEOBJECT, 0, 0))
+                if (!st->m_Flags.is(ESceneSpawnTool::flPickSpawnType) || !Scene->RayPickObject(dist, GetPosition(), D, OBJCLASS_SCENEOBJECT, 0, 0))
                     DU_impl.OutText(GetPosition(), s_name.c_str(), 0xffffffff, 0xff000000);
             }
             if (Selected())
@@ -1087,6 +1121,7 @@ bool CSpawnPoint::LoadLTX(CInifile& ini, LPCSTR sect_name)
         ELog.Msg(mtError, "& SPAWNPOINT: Unsupported spawn version.");
         return false;
     }
+
     switch (m_Type)
     {
         case ptSpawnPoint:
@@ -1146,7 +1181,6 @@ bool CSpawnPoint::LoadLTX(CInifile& ini, LPCSTR sect_name)
 void CSpawnPoint::SaveLTX(CInifile& ini, LPCSTR sect_name)
 {
     CCustomObject::SaveLTX(ini, sect_name);
-
     ini.w_u32(sect_name, "version", SPAWNPOINT_VERSION);
 
     // save attachment
@@ -1197,8 +1231,8 @@ void CSpawnPoint::SaveLTX(CInifile& ini, LPCSTR sect_name)
 bool CSpawnPoint::LoadStream(IReader& F)
 {
     u16 version = 0;
-
     R_ASSERT(F.r_chunk(SPAWNPOINT_CHUNK_VERSION, &version));
+
     if (version < 0x0014)
     {
         ELog.Msg(mtError, "& SPAWNPOINT: Unsupported version.");
@@ -1276,9 +1310,13 @@ bool CSpawnPoint::LoadStream(IReader& F)
 void CSpawnPoint::SaveStream(IWriter& F)
 {
     CCustomObject::SaveStream(F);
-
     F.open_chunk(SPAWNPOINT_CHUNK_VERSION);
-    F.w_u16(SPAWNPOINT_VERSION);
+
+    if (xrGameManager::GetGame() != EGame::SHOC)
+        F.w_u16(SPAWNPOINT_VERSION);
+    else
+        F.w_u16(SPAWNPOINT_VERSION - 3);
+
     F.close_chunk();
 
     // save attachment
@@ -1292,41 +1330,54 @@ void CSpawnPoint::SaveStream(IWriter& F)
     if (m_SpawnData.Valid())
     {
         m_SpawnData.SaveStream(F);
+        return;
     }
-    else
+
+    F.w_chunk(SPAWNPOINT_CHUNK_TYPE, &m_Type, sizeof(u32));
+
+    switch (m_Type)
     {
-        F.w_chunk(SPAWNPOINT_CHUNK_TYPE, &m_Type, sizeof(u32));
-        switch (m_Type)
-        {
-            case ptRPoint:
-                F.open_chunk(SPAWNPOINT_CHUNK_RPOINT);
-                F.w_u8(m_RP_TeamID);
-                F.w_u8(m_RP_Type);
+        case ptRPoint:
+            F.open_chunk(SPAWNPOINT_CHUNK_RPOINT);
+            F.w_u8(m_RP_TeamID);
+            F.w_u8(m_RP_Type);
+
+            if (xrGameManager::GetGame() == EGame::SHOC)
+            {
+                F.w_u8(m_GameType.m_GameType.get());
+                F.w_u8(0);
+            }
+            else
+            {
                 m_GameType.SaveStream(F);
                 F.w_stringZ(m_rpProfile);
-                F.close_chunk();
-                break;
-            case ptEnvMod:
-                F.open_chunk(SPAWNPOINT_CHUNK_ENVMOD);
-                F.w_float(m_EM_Radius);
-                F.w_float(m_EM_Power);
-                F.w_float(m_EM_ViewDist);
-                F.w_u32(m_EM_FogColor);
-                F.w_float(m_EM_FogDensity);
-                F.w_u32(m_EM_AmbientColor);
-                F.w_u32(m_EM_SkyColor);
-                F.close_chunk();
-                F.open_chunk(SPAWNPOINT_CHUNK_ENVMOD2);
-                F.w_u32(m_EM_HemiColor);
-                F.close_chunk();
+            }
+            F.close_chunk();
+            break;
+        case ptEnvMod:
+            F.open_chunk(SPAWNPOINT_CHUNK_ENVMOD);
+            F.w_float(m_EM_Radius);
+            F.w_float(m_EM_Power);
+            F.w_float(m_EM_ViewDist);
+            F.w_u32(m_EM_FogColor);
+            F.w_float(m_EM_FogDensity);
+            F.w_u32(m_EM_AmbientColor);
+            F.w_u32(m_EM_SkyColor);
+            F.close_chunk();
 
+            F.open_chunk(SPAWNPOINT_CHUNK_ENVMOD2);
+            F.w_u32(m_EM_HemiColor);
+            F.close_chunk();
+
+            if (xrGameManager::GetGame() != EGame::SHOC)
+            {
                 F.open_chunk(SPAWNPOINT_CHUNK_ENVMOD3);
                 F.w_u16(m_EM_Flags.get());
                 F.close_chunk();
-                break;
-            default:
-                THROW;
-        }
+            }
+            break;
+        default:
+            THROW;
     }
 }
 
@@ -1346,9 +1397,7 @@ bool CSpawnPoint::ExportGame(SExportStreams* F)
     if (m_SpawnData.Valid())
     {
         if (m_SpawnData.m_Data->validate())
-        {
             m_SpawnData.ExportGame(F, this);
-        }
         else
         {
             Log("! Invalid spawn data:", GetName());
@@ -1366,7 +1415,15 @@ bool CSpawnPoint::ExportGame(SExportStreams* F)
                 F->rpoint.stream.w_fvector3(GetRotation());
                 F->rpoint.stream.w_u8(m_RP_TeamID);
                 F->rpoint.stream.w_u8(m_RP_Type);
-                F->rpoint.stream.w_u16(m_GameType.m_GameType.get());
+
+                if (xrGameManager::GetGame() == EGame::SHOC)
+                {
+                    F->rpoint.stream.w_u8(static_cast<u8>(m_GameType.m_GameType.get()));
+                    F->rpoint.stream.w_u8(0);
+                }
+                else
+                    F->rpoint.stream.w_u16(m_GameType.m_GameType.get());
+
                 F->rpoint.stream.w_stringZ(m_rpProfile);
                 F->rpoint.stream.close_chunk();
                 break;
@@ -1495,19 +1552,24 @@ void CSpawnPoint::FillProp(LPCSTR pref, PropItemVec& items)
         {
             case ptRPoint:
             {
-                if (m_RP_Type == rptItemSpawn)
+                if (m_RP_Type == rptItemSpawn && xrGameManager::GetGame() != EGame::SHOC)
                 {
                     ChooseValue* C = PHelper().CreateChoose(items, PrepareKey(pref, "Respawn Point\\Profile"), &m_rpProfile, smCustom, 0, 0, 10, cfMultiSelect);
                     C->OnChooseFillEvent.bind(this, &CSpawnPoint::OnFillRespawnItemProfile);
                 }
                 else
-                {
                     PHelper().CreateU8(items, PrepareKey(pref, "Respawn Point\\Team"), &m_RP_TeamID, 0, MAX_TEAM - 1);
-                }
-                Token8Value* TV = PHelper().CreateToken8(items, PrepareKey(pref, "Respawn Point\\Spawn Type"), &m_RP_Type, rpoint_type);
+
+                Token8Value* TV;
+
+                if (xrGameManager::GetGame() == EGame::SHOC)
+                    TV = PHelper().CreateToken8(items, PrepareKey(pref, "Respawn Point\\Spawn Type"), &m_RP_Type, rpoint_type_soc);
+                else
+                    TV = PHelper().CreateToken8(items, PrepareKey(pref, "Respawn Point\\Spawn Type"), &m_RP_Type, rpoint_type);
+
                 TV->OnChangeEvent.bind(this, &CSpawnPoint::OnRPointTypeChange);
 
-                m_GameType.FillProp(pref, items);
+                CreatePropsForGameTypeChooser(&m_GameType, pref, items);
             }
             break;
             case ptEnvMod:
@@ -1517,7 +1579,7 @@ void CSpawnPoint::FillProp(LPCSTR pref, PropItemVec& items)
 
                 Flag16Value* FV = NULL;
 
-                FV = PHelper().CreateFlag16(items, PrepareKey(pref, "Environment Modificator\\View Distance"), &m_EM_Flags, eViewDist);
+                FV              = PHelper().CreateFlag16(items, PrepareKey(pref, "Environment Modificator\\View Distance"), &m_EM_Flags, eViewDist);
                 FV->OnChangeEvent.bind(this, &CSpawnPoint::OnEnvModFlagChange);
                 if (m_EM_Flags.test(eViewDist))
                     PHelper().CreateFloat(items, PrepareKey(pref, "Environment Modificator\\View Distance\\ "), &m_EM_ViewDist, EPS_L, 10000.f);

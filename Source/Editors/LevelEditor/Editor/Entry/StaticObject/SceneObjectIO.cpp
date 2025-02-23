@@ -2,11 +2,12 @@
 
 #define SCENEOBJ_CURRENT_VERSION 0x0012
 
-#define SCENEOBJ_CHUNK_VERSION 0x0900
+#define SCENEOBJ_CHUNK_VERSION   0x0900
 #define SCENEOBJ_CHUNK_REFERENCE 0x0902
 #define SCENEOBJ_CHUNK_PLACEMENT 0x0904
-#define SCENEOBJ_CHUNK_FLAGS 0x0905
-#define SCENEOBJ_CHUNK_SURFACE 0x0906
+#define SCENEOBJ_CHUNK_FLAGS     0x0905
+#define SCENEOBJ_CHUNK_SURFACE   0x0906
+
 bool CSceneObject::LoadLTX(CInifile& ini, LPCSTR sect_name)
 {
     bool bRes = true;
@@ -20,18 +21,17 @@ bool CSceneObject::LoadLTX(CInifile& ini, LPCSTR sect_name)
 
         if (!SetReference(ref_name.c_str()))
         {
-            ELog.Msg(mtError, "! CSceneObject: '%s' not found in library", ref_name.c_str());
-            bRes   = false;
-            int mr = mrNone;
+            ELog.Msg(mtError, "~ CSceneObject: '%s' not found in library", ref_name.c_str());
+            bRes         = false;
+            int       mr = mrNone;
 
             xr_string _new_name;
             bool      b_found = Scene->GetSubstObjectName(ref_name.c_str(), _new_name);
             if (b_found)
             {
                 xr_string _message;
-                _message = "Object [" + ref_name + "] not found. Relace it with [" + _new_name +
-                    "] or select other from library?";
-                mr = ELog.DlgMsg(mtConfirmation, mbYes | mbNo, _message.c_str());
+                _message = "Object [" + ref_name + "] not found. Relace it with [" + _new_name + "] or select other from library?";
+                mr       = ELog.DlgMsg(mtConfirmation, mbYes | mbNo, _message.c_str());
                 if (mrYes == mr)
                 {
                     bRes = SetReference(_new_name.c_str());
@@ -39,12 +39,15 @@ bool CSceneObject::LoadLTX(CInifile& ini, LPCSTR sect_name)
             }
             if (!bRes)
             {
-                /* if ( (mr==mrNone||mr==mrYes) && TfrmChoseItem::SelectItem(smObject,new_val,1))
+                 /*
+                 LPCSTR new_val = 0;
+                 if ((mr == mrNone || mr == mrYes) && UIChooseForm::SelectItem(smObject, 1, new_val))
                  {
                      bRes = SetReference(new_val);
-                     if(bRes)
+                     if (bRes)
                          Scene->RegisterSubstObjectName(ref_name.c_str(), new_val);
-                 }*/
+                 }
+                 */
             }
 
             Scene->Modified();
@@ -109,7 +112,8 @@ bool CSceneObject::LoadLTX(CInifile& ini, LPCSTR sect_name)
 
         if (!bRes)
             break;
-    } while (0);
+    }
+    while (0);
 
     return bRes;
 }
@@ -173,38 +177,24 @@ bool CSceneObject::LoadStream(IReader& F)
 
         if (!SetReference(buf))
         {
-            ELog.Msg(mtError, "! CSceneObject: '%s' not found in library", buf);
-            bRes   = false;
-            int mr = mrNone;
+            ELog.Msg(mtError, "~ CSceneObject: '%s' not found in library", buf);
+            bRes         = false;
+            int       mr = mrNone;
 
             xr_string _new_name;
             bool      b_found = Scene->GetSubstObjectName(buf, _new_name);
             if (b_found)
             {
                 xr_string _message;
-                _message = "Object [" + xr_string(buf) + "] not found. Relace it with [" + _new_name +
-                    "] or select other from library?";
-                mr = ELog.DlgMsg(mtConfirmation, mbYes | mbNo, _message.c_str());
+                _message = "Object [" + xr_string(buf) + "] not found. Relace it with [" + _new_name + "] or select other from library?";
+                mr       = ELog.DlgMsg(mtConfirmation, mbYes | mbNo, _message.c_str());
                 if (mrYes == mr)
                 {
                     bRes = SetReference(_new_name.c_str());
                 }
             }
-            if (!bRes)
-            {
-                /*if ( (mr==mrNone||mr==mrYes) && TfrmChoseItem::SelectItem(smObject,new_val,1))
-                {
-                    bRes = SetReference(new_val);
-                    if(bRes)
-                        Scene->RegisterSubstObjectName(buf, new_val);
-                }*/
-            }
-
             Scene->Modified();
         }
-
-        // if(!CheckVersion())
-        //     ELog.Msg( mtError, "! CSceneObject: '%s' different file version!", buf );
 
         // flags
         if (F.find_chunk(SCENEOBJ_CHUNK_FLAGS))
@@ -255,7 +245,8 @@ bool CSceneObject::LoadStream(IReader& F)
         }
         if (!bRes)
             break;
-    } while (0);
+    }
+    while (0);
 
     return bRes;
 }
@@ -265,12 +256,22 @@ void CSceneObject::SaveStream(IWriter& F)
     CCustomObject::SaveStream(F);
 
     F.open_chunk(SCENEOBJ_CHUNK_VERSION);
-    F.w_u16(SCENEOBJ_CURRENT_VERSION);
+    if (xrGameManager::GetGame() == EGame::SHOC)
+        F.w_u16(SCENEOBJ_CURRENT_VERSION - 1);
+    else
+        F.w_u16(SCENEOBJ_CURRENT_VERSION);
     F.close_chunk();
 
     // reference object version
     F.open_chunk(SCENEOBJ_CHUNK_REFERENCE);
     R_ASSERT2(m_pReference, "Empty SceneObject REFS");
+
+    if (xrGameManager::GetGame() == EGame::SHOC)
+    {
+        F.w_s32(m_pReference->Version());
+        F.w_s32(0);   // reserved
+    }
+
     F.w_stringZ(m_ReferenceName);
     F.close_chunk();
 
@@ -278,7 +279,7 @@ void CSceneObject::SaveStream(IWriter& F)
     F.w_u32(m_Flags.flags);
     F.close_chunk();
 
-    if (m_Flags.test(flUseSurface))
+    if (m_Flags.test(flUseSurface) && xrGameManager::GetGame() != EGame::SHOC)
     {
         F.open_chunk(SCENEOBJ_CHUNK_FLAGS);
         F.w_u32(m_Surfaces.size());

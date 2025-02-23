@@ -4,16 +4,16 @@
 
 #define LEVEL_LODS_TEX_NAME "level_lods"
 #define LEVEL_LODS_NRM_NAME "level_lods_nm"
-#define LEVEL_DI_TEX_NAME "level_stat"
+#define LEVEL_DI_TEX_NAME   "level_stat"
 
 class CSceneStat
 {
     Fvector bb_min;
     u32     bb_sx, bb_sz;
 
-    u32    max_svert;
-    U32Vec svertices;
-    u32&   svertex(u32 ix, u32 iz)
+    u32     max_svert;
+    U32Vec  svertices;
+    u32&    svertex(u32 ix, u32 iz)
     {
         VERIFY((ix < bb_sx) && (iz < bb_sz));
         return svertices[iz * bb_sx + ix];
@@ -67,9 +67,9 @@ public:
         U32Vec data(sx * sz);
         // prepare vertex info
         // find max
-        u32 ix, iz;
-        u32 total_svert  = 0;
-        u32 total_muvert = 0;
+        u32    ix, iz;
+        u32    total_svert  = 0;
+        u32    total_muvert = 0;
         for (ix = 0; ix < bb_sx; ix++)
         {
             for (iz = 0; iz < bb_sz; iz++)
@@ -175,10 +175,10 @@ void SceneBuilder::SaveBuildAsObject()
     b_texture_real* last_texture = NULL;
     for (idx = 0; idx < l_face_it; ++idx)
     {
-        const b_face& it = l_faces[idx];
+        const b_face&   it = l_faces[idx];
 
-        b_material&     m = l_materials[it.dwMaterial];
-        b_texture_real& t = l_textures[m.surfidx];
+        b_material&     m  = l_materials[it.dwMaterial];
+        b_texture_real& t  = l_textures[m.surfidx];
         if (last_texture != &t)
         {
             _splitpath(t.name, 0, 0, tex_name, 0);
@@ -187,8 +187,7 @@ void SceneBuilder::SaveBuildAsObject()
             last_texture = &t;
         }
 
-        sprintf(
-            tmp, "f %d/%d %d/%d %d/%d", it.v[0] + 1, idx * 3 + 1, it.v[1] + 1, idx * 3 + 2, it.v[2] + 1, idx * 3 + 3);
+        sprintf(tmp, "f %d/%d %d/%d %d/%d", it.v[0] + 1, idx * 3 + 1, it.v[1] + 1, idx * 3 + 2, it.v[2] + 1, idx * 3 + 3);
         tmpFaces.w_string(tmp);
     }
     total_vertices += l_vert_it;
@@ -217,10 +216,10 @@ void SceneBuilder::SaveBuildAsObject()
         // faces
         for (int fi = 0; fi < m.m_iFaceCount; ++fi)
         {
-            const b_face& it = m.m_pFaces[fi];
+            const b_face&   it = m.m_pFaces[fi];
 
-            b_material&     m = l_materials[it.dwMaterial];
-            b_texture_real& t = l_textures[m.surfidx];
+            b_material&     m  = l_materials[it.dwMaterial];
+            b_texture_real& t  = l_textures[m.surfidx];
             if (last_texture != &t)
             {
                 _splitpath(t.name, 0, 0, tex_name, 0);
@@ -228,10 +227,7 @@ void SceneBuilder::SaveBuildAsObject()
                 tmpFaces.w_string(tmp);
                 last_texture = &t;
             }
-            sprintf(
-                tmp, "f %d/%d %d/%d %d/%d", it.v[0] + 1 + total_vertices, fi * 3 + 1 + total_tcs,
-                it.v[1] + 1 + total_vertices, fi * 3 + 2 + total_tcs, it.v[2] + 1 + total_vertices,
-                fi * 3 + 3 + total_tcs);
+            sprintf(tmp, "f %d/%d %d/%d %d/%d", it.v[0] + 1 + total_vertices, fi * 3 + 1 + total_tcs, it.v[1] + 1 + total_vertices, fi * 3 + 2 + total_tcs, it.v[2] + 1 + total_vertices, fi * 3 + 3 + total_tcs);
             /*
                         sprintf				(tmp,"f %d %d %d",	it.v[0]+1+total_vertices,
                                                                 it.v[1]+1+total_vertices,
@@ -245,79 +241,91 @@ void SceneBuilder::SaveBuildAsObject()
     F->w(tmpFaces.pointer(), tmpFaces.size());
 
     // uv
-    //                sprintf			(tmp,"vt %f %f",v_it->UV.x,_abs(1.f-v_it->UV.y));		F.w_string	(tmp);
+    // sprintf(tmp,"vt %f %f",v_it->UV.x,_abs(1.f-v_it->UV.y)); F.w_string	(tmp);
 
     // normals
-    //                sprintf			(tmp,"vn %f %f %f",mV.x,mV.y,mV.z);		F.w_string	(tmp);
+    // sprintf(tmp,"vn %f %f %f",mV.x,mV.y,mV.z); F.w_string	(tmp);
 
     // g
-    //                sprintf			(tmp,"vg %f %f %f",mV.x,mV.y,mV.z);		F.w_string	(tmp);
+    // sprintf(tmp,"vg %f %f %f",mV.x,mV.y,mV.z); F.w_string	(tmp);
 
     // b
-    //                sprintf			(tmp,"vb %f %f %f",mV.x,mV.y,mV.z);		F.w_string	(tmp);
+    // sprintf(tmp,"vb %f %f %f",mV.x,mV.y,mV.z); F.w_string	(tmp);
 
     /*
-        string512 	tmp,tex_path,tex_name;
-        // write mtl
-        for (SplitIt split_it=m_Splits.begin(); split_it!=m_Splits.end(); split_it++)
+        string512 tmp,
+        tex_path, tex_name;
+    // write mtl
+    for (SplitIt split_it = m_Splits.begin(); split_it != m_Splits.end(); split_it++)
+    {
+        _splitpath((*split_it)->m_Surf->_Texture(), 0, 0, tex_name, 0);
+        sprintf(tmp, "newmtl %s", tex_name);
+        F.w_string(tmp);
+
+        _splitpath((*split_it)->m_Surf->_Texture(), 0, tex_path, tex_name, 0);
+        strconcat(sizeof(tex_path), tex_path, tex_path, "\\", tex_name, ".tga");
+        sprintf(tmp, "map_Kd %s", tex_path);
+        F.w_string(tmp);
+    }
+    sprintf(tmp, "mtllib %s", name);
+    F.w_string(tmp);
+
+    // write mtl
+    u32 v_offs = 0;
+    for (split_it = m_Splits.begin(); split_it != m_Splits.end(); split_it++)
+    {
+        _splitpath((*split_it)->m_Surf->_Texture(), 0, 0, tex_name, 0);
+        sprintf(tmp, "g %d", split_it - m_Splits.begin());
+        F.w_string(tmp);
+        sprintf(tmp, "usemtl %s", tex_name);
+        F.w_string(tmp);
+        Fvector mV;
+        Fmatrix mZ;
+        mZ.mirrorZ();
+        for (COGFCPIt it = (*split_it)->m_Parts.begin(); it != (*split_it)->m_Parts.end(); it++)
         {
-            _splitpath			((*split_it)->m_Surf->_Texture(), 0, 0, tex_name, 0 );
-            sprintf				(tmp,"newmtl %s",tex_name);
-            F.w_string			(tmp);
-
-            _splitpath			((*split_it)->m_Surf->_Texture(), 0, tex_path, tex_name, 0 );
-            strconcat			(sizeof(tex_path),tex_path,tex_path,"\\",tex_name,".tga");
-            sprintf				(tmp,"map_Kd %s",tex_path);
-            F.w_string	(tmp);
-        }
-        sprintf					(tmp,"mtllib %s",name);
-        F.w_string				(tmp);
-
-        // write mtl
-        u32 v_offs				= 0;
-        for (split_it=m_Splits.begin(); split_it!=m_Splits.end(); split_it++){
-            _splitpath			((*split_it)->m_Surf->_Texture(), 0, 0, tex_name, 0 );
-            sprintf				(tmp,"g %d",split_it-m_Splits.begin());				F.w_string	(tmp);
-            sprintf				(tmp,"usemtl %s",tex_name);							F.w_string	(tmp);
-            Fvector 			mV;
-            Fmatrix 			mZ;
-            mZ.mirrorZ			();
-            for (COGFCPIt it=(*split_it)->m_Parts.begin(); it!=(*split_it)->m_Parts.end(); it++){
-                CObjectOGFCollectorPacked* part = *it;
-                // vertices
-                OGFVertVec& VERTS	= part->getV_Verts();
-                OGFVertIt 			v_it;
-                for (v_it=VERTS.begin(); v_it!=VERTS.end(); v_it++){
-                    mZ.transform_tiny(mV,v_it->P);
-                    sprintf			(tmp,"v %f %f %f",mV.x,mV.y,mV.z); 		F.w_string	(tmp);
-                }
-                for (v_it=VERTS.begin(); v_it!=VERTS.end(); v_it++){
-                    sprintf			(tmp,"vt %f %f",v_it->UV.x,_abs(1.f-v_it->UV.y));		F.w_string	(tmp);
-                }
-                for (v_it=VERTS.begin(); v_it!=VERTS.end(); v_it++){
-                    mZ.transform_dir(mV,v_it->N);
-                    sprintf			(tmp,"vn %f %f %f",mV.x,mV.y,mV.z);		F.w_string	(tmp);
-                }
-                for (v_it=VERTS.begin(); v_it!=VERTS.end(); v_it++){
-                    mZ.transform_dir(mV,v_it->T);
-                    sprintf			(tmp,"vg %f %f %f",mV.x,mV.y,mV.z);		F.w_string	(tmp);
-                }
-                for (v_it=VERTS.begin(); v_it!=VERTS.end(); v_it++){
-                    mZ.transform_dir(mV,v_it->B);
-                    sprintf			(tmp,"vb %f %f %f",mV.x,mV.y,mV.z);		F.w_string	(tmp);
-                }
-                // faces
-                OGFFaceVec& FACES	= part->getV_Faces();
-                OGFFaceIt 			f_it;
-                for (f_it=FACES.begin(); f_it!=FACES.end(); f_it++){
-                    sprintf			(tmp,"f %d/%d/%d %d/%d/%d
-    %d/%d/%d",v_offs+f_it->v[2]+1,v_offs+f_it->v[2]+1,v_offs+f_it->v[2]+1,
-                                                                        v_offs+f_it->v[1]+1,v_offs+f_it->v[1]+1,v_offs+f_it->v[1]+1,
-                                                                        v_offs+f_it->v[0]+1,v_offs+f_it->v[0]+1,v_offs+f_it->v[0]+1);
-    F.w_string	(tmp);
-                }
-                v_offs  			+= VERTS.size();
+            CObjectOGFCollectorPacked* part  = *it;
+            // vertices
+            OGFVertVec& VERTS = part->getV_Verts();
+            OGFVertIt v_it;
+            for (v_it = VERTS.begin(); v_it != VERTS.end(); v_it++)
+            {
+                mZ.transform_tiny(mV, v_it->P);
+                sprintf(tmp, "v %f %f %f", mV.x, mV.y, mV.z);
+                F.w_string(tmp);
             }
+            for (v_it = VERTS.begin(); v_it != VERTS.end(); v_it++)
+            {
+                sprintf(tmp, "vt %f %f", v_it->UV.x, _abs(1.f - v_it->UV.y));
+                F.w_string(tmp);
+            }
+            for (v_it = VERTS.begin(); v_it != VERTS.end(); v_it++)
+            {
+                mZ.transform_dir(mV, v_it->N);
+                sprintf(tmp, "vn %f %f %f", mV.x, mV.y, mV.z);
+                F.w_string(tmp);
+            }
+            for (v_it = VERTS.begin(); v_it != VERTS.end(); v_it++)
+            {
+                mZ.transform_dir(mV, v_it->T);
+                sprintf(tmp, "vg %f %f %f", mV.x, mV.y, mV.z);
+                F.w_string(tmp);
+            }
+            for (v_it = VERTS.begin(); v_it != VERTS.end(); v_it++)
+            {
+                mZ.transform_dir(mV, v_it->B);
+                sprintf(tmp, "vb %f %f %f", mV.x, mV.y, mV.z);
+                F.w_string(tmp);
+            }
+            // faces
+            OGFFaceVec& FACES = part->getV_Faces();
+            OGFFaceIt   f_it;
+            for (f_it = FACES.begin(); f_it != FACES.end(); f_it++)
+            {
+                sprintf(tmp, "f %d/%d/%d %d/%d/%d %d/%d/%d", v_offs + f_it->v[2] + 1, v_offs + f_it->v[2] + 1, v_offs + f_it->v[2] + 1, v_offs + f_it->v[1] + 1, v_offs + f_it->v[1] + 1, v_offs + f_it->v[1] + 1, v_offs + f_it->v[0] + 1, v_offs + f_it->v[0] + 1, v_offs + f_it->v[0] + 1);
+                F.w_string(tmp);
+            }
+            v_offs += VERTS.size();
         }
     }
     */
@@ -329,99 +337,108 @@ void SceneBuilder::SaveBuild()
 {
     xr_string fn = MakeLevelPath("build.prj");
     IWriter*  F  = FS.w_open(fn.c_str());
-    if (F)
-    {
-        F->open_chunk(EB_Version);
+
+    if (!F)
+        return;
+
+    F->open_chunk(EB_Version);
+    if (xrGameManager::GetGame() == EGame::SHOC)
+        F->w_u32(XRCL_CURRENT_VERSION - 1);
+    else
         F->w_u32(XRCL_CURRENT_VERSION);
-        F->close_chunk();
+    F->close_chunk();
 
-        F->open_chunk(EB_Parameters);
-        F->w(&Scene->m_LevelOp.m_BuildParams, sizeof(b_params));
-        F->close_chunk();
+    F->open_chunk(EB_Parameters);
+    F->w(&Scene->m_LevelOp.m_BuildParams, sizeof(b_params));
+    F->close_chunk();
 
-        F->open_chunk(EB_Vertices);
-        F->w(l_verts, sizeof(b_vertex) * l_vert_it);   //. l_vert_cnt
-        F->close_chunk();
+    F->open_chunk(EB_Vertices);
+    F->w(l_verts, sizeof(b_vertex) * l_vert_it);   //. l_vert_cnt
+    F->close_chunk();
 
-        F->open_chunk(EB_Faces);
-        F->w(l_faces, sizeof(b_face) * l_face_it);   //. l_face_cnt
-        F->close_chunk();
+    F->open_chunk(EB_Faces);
+    F->w(l_faces, sizeof(b_face) * l_face_it);   //. l_face_cnt
+    F->close_chunk();
 
+    if (xrGameManager::GetGame() != EGame::SHOC)
+    {
         F->open_chunk(EB_SmoothGroups);
         F->w(l_smgroups, sizeof(u32) * l_face_it);   //. l_face_cnt
         F->close_chunk();
-
-        F->open_chunk(EB_Materials);
-        F->w(l_materials.data(), sizeof(b_material) * l_materials.size());
-        F->close_chunk();
-
-        F->open_chunk(EB_Shaders_Render);
-        F->w(l_shaders.data(), sizeof(b_shader) * l_shaders.size());
-        F->close_chunk();
-
-        F->open_chunk(EB_Shaders_Compile);
-        F->w(l_shaders_xrlc.data(), sizeof(b_shader) * l_shaders_xrlc.size());
-        F->close_chunk();
-
-        F->open_chunk(EB_Textures);
-        F->w(l_textures.data(), sizeof(b_texture_real) * l_textures.size());
-        F->close_chunk();
-
-        F->open_chunk(EB_Glows);
-        F->w(l_glows.data(), sizeof(b_glow) * l_glows.size());
-        F->close_chunk();
-
-        F->open_chunk(EB_Portals);
-        F->w(l_portals.data(), sizeof(b_portal) * l_portals.size());
-        F->close_chunk();
-
-        F->open_chunk(EB_Light_control);
-        for (xr_vector<sb_light_control>::iterator lc_it = l_light_control.begin(); lc_it != l_light_control.end();
-             lc_it++)
-        {
-            F->w(lc_it->name, sizeof(lc_it->name));
-            F->w_u32(lc_it->data.size());
-            F->w(lc_it->data.data(), sizeof(u32) * lc_it->data.size());
-        }
-        F->close_chunk();
-
-        F->open_chunk(EB_Light_static);
-        F->w(l_light_static.data(), sizeof(b_light_static) * l_light_static.size());
-        F->close_chunk();
-
-        F->open_chunk(EB_Light_dynamic);
-        F->w(l_light_dynamic.data(), sizeof(b_light_dynamic) * l_light_dynamic.size());
-        F->close_chunk();
-
-        F->open_chunk(EB_LOD_models);
-        for (int k = 0; k < (int)l_lods.size(); ++k)
-            F->w(&l_lods[k].lod, sizeof(b_lod));
-        F->close_chunk();
-
-        F->open_chunk(EB_MU_models);
-        for (int k = 0; k < (int)l_mu_models.size(); ++k)
-        {
-            b_mu_model& m = l_mu_models[k];
-            // name
-            F->w_stringZ(m.name);
-            // vertices
-            F->w_u32(m.m_iVertexCount);
-            F->w(m.m_pVertices, sizeof(b_vertex) * m.m_iVertexCount);
-            // faces
-            F->w_u32(m.m_iFaceCount);
-            F->w(m.m_pFaces, sizeof(b_face) * m.m_iFaceCount);
-            // lod_id
-            F->w_u16(m.lod_id);
-            F->w(m.m_smgroups, sizeof(int) * m.m_iFaceCount);
-        }
-        F->close_chunk();
-
-        F->open_chunk(EB_MU_refs);
-        F->w(l_mu_refs.data(), sizeof(b_mu_reference) * l_mu_refs.size());
-        F->close_chunk();
-
-        FS.w_close(F);
     }
+
+    F->open_chunk(EB_Materials);
+    F->w(l_materials.data(), sizeof(b_material) * l_materials.size());
+    F->close_chunk();
+
+    F->open_chunk(EB_Shaders_Render);
+    F->w(l_shaders.data(), sizeof(b_shader) * l_shaders.size());
+    F->close_chunk();
+
+    F->open_chunk(EB_Shaders_Compile);
+    F->w(l_shaders_xrlc.data(), sizeof(b_shader) * l_shaders_xrlc.size());
+    F->close_chunk();
+
+    F->open_chunk(EB_Textures);
+    F->w(l_textures.data(), sizeof(b_texture_real) * l_textures.size());
+    F->close_chunk();
+
+    F->open_chunk(EB_Glows);
+    F->w(l_glows.data(), sizeof(b_glow) * l_glows.size());
+    F->close_chunk();
+
+    F->open_chunk(EB_Portals);
+    F->w(l_portals.data(), sizeof(b_portal) * l_portals.size());
+    F->close_chunk();
+
+    F->open_chunk(EB_Light_control);
+    for (xr_vector<sb_light_control>::iterator lc_it = l_light_control.begin(); lc_it != l_light_control.end(); lc_it++)
+    {
+        F->w(lc_it->name, sizeof(lc_it->name));
+        F->w_u32(lc_it->data.size());
+        F->w(lc_it->data.data(), sizeof(u32) * lc_it->data.size());
+    }
+    F->close_chunk();
+
+    F->open_chunk(EB_Light_static);
+    F->w(l_light_static.data(), sizeof(b_light_static) * l_light_static.size());
+    F->close_chunk();
+
+    F->open_chunk(EB_Light_dynamic);
+    F->w(l_light_dynamic.data(), sizeof(b_light_dynamic) * l_light_dynamic.size());
+    F->close_chunk();
+
+    F->open_chunk(EB_LOD_models);
+    for (int k = 0; k < (int)l_lods.size(); ++k)
+        F->w(&l_lods[k].lod, sizeof(b_lod));
+    F->close_chunk();
+
+    F->open_chunk(EB_MU_models);
+
+    for (int k = 0; k < (int)l_mu_models.size(); ++k)
+    {
+        b_mu_model& m = l_mu_models[k];
+        // name
+        F->w_stringZ(m.name);
+        // vertices
+        F->w_u32(m.m_iVertexCount);
+        F->w(m.m_pVertices, sizeof(b_vertex) * m.m_iVertexCount);
+        // faces
+        F->w_u32(m.m_iFaceCount);
+        F->w(m.m_pFaces, sizeof(b_face) * m.m_iFaceCount);
+        // lod_id
+        F->w_u16(m.lod_id);
+
+        if (xrGameManager::GetGame() != EGame::SHOC)
+            F->w(m.m_smgroups, sizeof(int) * m.m_iFaceCount);
+    }
+    F->close_chunk();
+
+    F->open_chunk(EB_MU_refs);
+    F->w(l_mu_refs.data(), sizeof(b_mu_reference) * l_mu_refs.size());
+    F->close_chunk();
+
+    FS.w_close(F);
 }
 
 int SceneBuilder::CalculateSector(const Fvector& P, float R)
@@ -474,30 +491,21 @@ void SceneBuilder::Clear()
     xr_delete(l_scene_stat);
 }
 
+//------------------------------------------------------------------------------
 // CEditObject build functions
-
+//------------------------------------------------------------------------------
 float CalcArea(const Fvector& v0, const Fvector& v1, const Fvector& v2)
 {
     float e1 = v0.distance_to(v1);
     float e2 = v0.distance_to(v2);
     float e3 = v1.distance_to(v2);
 
-    float p = (e1 + e2 + e3) / 2.f;
+    float p  = (e1 + e2 + e3) / 2.f;
     return _sqrt(p * (p - e1) * (p - e2) * (p - e3));
 }
 
 // const Fmatrix& parent,
-BOOL GetStaticCformData(
-    const Fmatrix&   parent,
-    CEditableMesh*   mesh,
-    CEditableObject* object,
-    Fvector*         verts,
-    int&             vert_cnt,
-    int&             vert_it,
-    CDB::TRI*        faces,
-    int&             face_cnt,
-    int&             face_it,
-    CSceneObject*    obj)
+BOOL GetStaticCformData(const Fmatrix& parent, CEditableMesh* mesh, CEditableObject* object, Fvector* verts, int& vert_cnt, int& vert_it, CDB::TRI* faces, int& face_cnt, int& face_it, CSceneObject* obj)
 {
     if (object->IsDynamic())
         return FALSE;
@@ -532,9 +540,7 @@ BOOL GetStaticCformData(
         for (IntIt f_it = face_lst.begin(); f_it != face_lst.end(); ++f_it)
         {
             st_Face& face = mesh->Faces()[*f_it];
-            float    _a   = CalcArea(
-                mesh->Vertices()[face.pv[0].pindex], mesh->Vertices()[face.pv[1].pindex],
-                mesh->Vertices()[face.pv[2].pindex]);
+            float    _a   = CalcArea(mesh->Vertices()[face.pv[0].pindex], mesh->Vertices()[face.pv[1].pindex], mesh->Vertices()[face.pv[2].pindex]);
             if (!_valid(_a) || (_a < EPS))
             {
                 continue;
@@ -561,7 +567,7 @@ BOOL GetStaticCformData(
                     second_face.material  = first_face.material;
                     for (int k = 0; k < 3; ++k)
                     {
-                        st_FaceVert& fv = face.pv[2 - k];
+                        st_FaceVert& fv      = face.pv[2 - k];
                         // vertex index
                         second_face.verts[k] = fv.pindex + point_offs;
                         // uv maps
@@ -574,20 +580,7 @@ BOOL GetStaticCformData(
     return bResult;
 }
 
-BOOL SceneBuilder::BuildMesh(
-    const Fmatrix&   parent,
-    CEditableObject* object,
-    CEditableMesh*   mesh,
-    int              sect_num,
-    b_vertex*        verts,
-    int&             vert_cnt,
-    int&             vert_it,
-    b_face*          faces,
-    int&             face_cnt,
-    int&             face_it,
-    u32*             smgroups,
-    const Fmatrix&   real_transform,
-    CSceneObject*    obj)
+BOOL SceneBuilder::BuildMesh(const Fmatrix& parent, CEditableObject* object, CEditableMesh* mesh, int sect_num, b_vertex* verts, int& vert_cnt, int& vert_it, b_face* faces, int& face_cnt, int& face_it, u32* smgroups, const Fmatrix& real_transform, CSceneObject* obj)
 {
     BOOL bResult = TRUE;
     int  point_offs;
@@ -713,7 +706,7 @@ BOOL SceneBuilder::BuildMesh(
                     R_ASSERT2((fv.pindex + point_offs) < vert_it, "Index out of range");
                     first_face.v[k] = fv.pindex + point_offs;
                     // uv maps
-                    int offs = 0;
+                    int offs        = 0;
                     for (u32 t = 0; t < dwTexCnt; ++t)
                     {
                         st_VMapPt& vm_pt = mesh->m_VMRefs[fv.vmref].pts[t];
@@ -741,11 +734,11 @@ BOOL SceneBuilder::BuildMesh(
 
                 for (int k = 0; k < 3; ++k)
                 {
-                    st_FaceVert& fv = face.pv[2 - k];
+                    st_FaceVert& fv  = face.pv[2 - k];
                     // vertex index
                     second_face.v[k] = fv.pindex + point_offs;
                     // uv maps
-                    int offs = 0;
+                    int offs         = 0;
                     for (u32 t = 0; t < dwTexCnt; t++)
                     {
                         st_VMapPt& vm_pt = mesh->m_VMRefs[fv.vmref].pts[t];
@@ -763,8 +756,7 @@ BOOL SceneBuilder::BuildMesh(
             }
         }
         if (dwInvalidFaces)
-            Msg("! Object '%s' - '%s' has %d invalid face(s). Removed.", object->GetName(), mesh->Name().c_str(),
-                dwInvalidFaces);
+            Msg("! Object '%s' - '%s' has %d invalid face(s). Removed.", object->GetName(), mesh->Name().c_str(), dwInvalidFaces);
 
         if (!bResult)
             break;
@@ -779,7 +771,7 @@ BOOL SceneBuilder::BuildObject(CSceneObject* obj)
     temp.sprintf("Building object: %s", obj->GetName());
     UI->SetStatus(temp.c_str());
 
-    Fmatrix T = obj->_Transform();
+    Fmatrix T  = obj->_Transform();
 
     Fmatrix cv = Fidentity;
 
@@ -799,9 +791,7 @@ BOOL SceneBuilder::BuildObject(CSceneObject* obj)
     {
         CSector* S        = PortalUtils.FindSector(obj, *M);
         int      sect_num = S ? S->m_sector_num : m_iDefaultSectorNum;
-        if (!BuildMesh(
-                T, O, *M, sect_num, l_verts, l_vert_cnt, l_vert_it, l_faces, l_face_cnt, l_face_it, l_smgroups,
-                obj->_Transform(), obj))
+        if (!BuildMesh(T, O, *M, sect_num, l_verts, l_vert_cnt, l_vert_it, l_faces, l_face_cnt, l_face_it, l_smgroups, obj->_Transform(), obj))
             return FALSE;
         // fill DI vertices
         for (u32 pt_id = 0; pt_id < (*M)->GetVCount(); pt_id++)
@@ -809,7 +799,7 @@ BOOL SceneBuilder::BuildObject(CSceneObject* obj)
             Fvector        v_res1, v_res2;
             const Fvector& v_src = (*M)->m_Vertices[pt_id];
 
-            Fvector tmp;
+            Fvector        tmp;
             cv.transform_tiny(tmp, v_src);
             T.transform_tiny(v_res1, tmp);
 
@@ -851,11 +841,11 @@ BOOL SceneBuilder::BuildMUObject(CSceneObject* obj)
     temp.sprintf("Building object: %s", obj->GetName());
     UI->SetStatus(temp.c_str());
 
-    int model_idx = GetModelIdx(O->GetName());
+    int      model_idx = GetModelIdx(O->GetName());
 
     // detect sector
-    CSector* S        = PortalUtils.FindSector(obj, *O->FirstMesh());
-    int      sect_num = S ? S->m_sector_num : m_iDefaultSectorNum;
+    CSector* S         = PortalUtils.FindSector(obj, *O->FirstMesh());
+    int      sect_num  = S ? S->m_sector_num : m_iDefaultSectorNum;
 
     // build model
     if (-1 == model_idx || m_save_as_object)
@@ -884,11 +874,11 @@ BOOL SceneBuilder::BuildMUObject(CSceneObject* obj)
 
         if (m_save_as_object)
         {
-            T = obj->_Transform();
+            T          = obj->_Transform();
 
             Fmatrix cv = Fidentity;
 
-            cv.k.z = -1.f;
+            cv.k.z     = -1.f;
 
             Fmatrix TM;
 
@@ -898,9 +888,7 @@ BOOL SceneBuilder::BuildMUObject(CSceneObject* obj)
         }
 
         for (EditMeshIt MESH = O->FirstMesh(); MESH != O->LastMesh(); ++MESH)
-            if (!BuildMesh(
-                    T, O, *MESH, sect_num, M.m_pVertices, M.m_iVertexCount, vert_it, M.m_pFaces, M.m_iFaceCount,
-                    face_it, M.m_smgroups, obj->_Transform(), obj))
+            if (!BuildMesh(T, O, *MESH, sect_num, M.m_pVertices, M.m_iVertexCount, vert_it, M.m_pFaces, M.m_iFaceCount, face_it, M.m_smgroups, obj->_Transform(), obj))
                 return FALSE;
 
         M.m_iFaceCount   = face_it;
@@ -912,7 +900,7 @@ BOOL SceneBuilder::BuildMUObject(CSceneObject* obj)
     R.model_index     = model_idx;
     R.transform       = obj->_Transform();
     R.flags.zero();
-    R.sector = (u16)sect_num;
+    R.sector      = (u16)sect_num;
 
     // scene statssm
     b_mu_model& M = l_mu_models[model_idx];
@@ -923,8 +911,9 @@ BOOL SceneBuilder::BuildMUObject(CSceneObject* obj)
     return TRUE;
 }
 
+//------------------------------------------------------------------------------
 // light build functions
-
+//------------------------------------------------------------------------------
 int SceneBuilder::BuildLightControl(LPCSTR name)
 {
     for (u32 k = 0; k < l_light_control.size(); k++)
@@ -985,7 +974,7 @@ void SceneBuilder::BuildHemiLights(u8 quality, LPCSTR lcontrol)
         sl.data.direction.set(0.f, -1.f, 0.f);
     }
 }
-BOOL SceneBuilder::BuildSun(u8 quality, Fvector2 dir)
+BOOL SceneBuilder::BuildSun(u8 quality, float dispersion, Fvector2 dir)
 {
     int controller_ID = BuildLightControl(LCONTROL_SUN);
     // static
@@ -1005,6 +994,12 @@ BOOL SceneBuilder::BuildSun(u8 quality, Fvector2 dir)
         case 3:
             samples = 7;
             break;
+        case 4:
+            samples = 14;
+            break;
+        case 5:
+            samples = 22;
+            break;
         default:
             THROW2("Invalid case.");
     }
@@ -1014,25 +1009,40 @@ BOOL SceneBuilder::BuildSun(u8 quality, Fvector2 dir)
     float sample_energy = 1.f / float(samples * samples);
     color.mul_rgb(sample_energy);
 
-    float disp = deg2rad(3.f);   // dispersion of sun
-    float da   = disp / float(samples);
-    float mn_x = dir.x - disp / 2;
-    float mn_y = dir.y - disp / 2;
-    for (int x = 0; x < samples; x++)
+    if (samples > 1)
     {
-        float fx = mn_x + x * da;
-        for (int y = 0; y < samples; y++)
+        float disp = deg2rad(dispersion);   // dispersion of sun
+        float da   = disp / float(samples - 1);
+        float mn_x = dir.x - disp / 2;
+        float mn_y = dir.y - disp / 2;
+        for (int x = 0; x < samples; x++)
         {
-            float fy = mn_y + y * da;
-            l_light_static.push_back(b_light_static());
-            b_light_static& sl = l_light_static.back();
-            sl.controller_ID   = controller_ID;
-            sl.data.type       = D3DLIGHT_DIRECTIONAL;
-            sl.data.position.set(0, 0, 0);
-            sl.data.diffuse.set(color);
-            sl.data.direction.setHP(fy, fx);
+            float _x = mn_x + x * da;
+            float fx = mn_x + x * da;
+            for (int y = 0; y < samples; y++)
+            {
+                float fy = mn_y + y * da;
+                l_light_static.push_back(b_light_static());
+                b_light_static& sl = l_light_static.back();
+                sl.controller_ID   = controller_ID;
+                sl.data.type       = D3DLIGHT_DIRECTIONAL;
+                sl.data.position.set(0, 0, 0);
+                sl.data.diffuse.set(color);
+                sl.data.direction.setHP(fy, fx);
+            }
         }
     }
+    else
+    {
+        l_light_static.push_back(b_light_static());
+        b_light_static& sl = l_light_static.back();
+        sl.controller_ID = controller_ID;
+        sl.data.type = D3DLIGHT_DIRECTIONAL;
+        sl.data.position.set(0, 0, 0);
+        sl.data.diffuse.set(color);
+        sl.data.direction.setHP(dir.y, dir.x);
+    }
+
     // dynamic
     {
         l_light_dynamic.push_back(b_light_dynamic());
@@ -1047,12 +1057,7 @@ BOOL SceneBuilder::BuildSun(u8 quality, Fvector2 dir)
     return TRUE;
 }
 
-BOOL SceneBuilder::BuildPointLight(
-    b_light*           b,
-    const Flags32&     usage,
-    svector<WORD, 16>* sectors,
-    FvectorVec*        soft_points,
-    const Fmatrix*     soft_transform)
+BOOL SceneBuilder::BuildPointLight(b_light* b, const Flags32& usage, svector<WORD, 16>* sectors, FvectorVec* soft_points, const Fmatrix* soft_transform)
 {
     if (usage.is(ELight::flAffectStatic))
     {
@@ -1115,13 +1120,13 @@ BOOL SceneBuilder::BuildLight(CLight* e)
     Fvector dir;
     dir.setHP(e->GetRotation().y, e->GetRotation().x);
     L.data.direction.set(dir);
-    L.data.range        = e->m_Range;
-    L.data.attenuation0 = e->m_Attenuation0;
-    L.data.attenuation1 = e->m_Attenuation1;
-    L.data.attenuation2 = e->m_Attenuation2;
-    L.data.phi          = e->m_Cone;
+    L.data.range                = e->m_Range;
+    L.data.attenuation0         = e->m_Attenuation0;
+    L.data.attenuation1         = e->m_Attenuation1;
+    L.data.attenuation2         = e->m_Attenuation2;
+    L.data.phi                  = e->m_Cone;
 
-    L.controller_ID = BuildLightControl(e->GetLControlName());   // BuildLightControl(LCONTROL_STATIC);
+    L.controller_ID             = BuildLightControl(e->GetLControlName());   // BuildLightControl(LCONTROL_STATIC);
 
     svector<u16, 16>* lpSectors = nullptr;
     if (e->m_Flags.is(ELight::flAffectDynamic))
@@ -1167,20 +1172,20 @@ BOOL SceneBuilder::BuildLight(CLight* e)
     switch (e->m_Type)
     {
         case ELight::ltPoint:
-            return BuildPointLight(
-                &L, e->m_Flags, lpSectors, e->m_FuzzyData ? &e->m_FuzzyData->m_Positions : 0, &e->_Transform());
+            return BuildPointLight(&L, e->m_Flags, lpSectors, e->m_FuzzyData ? &e->m_FuzzyData->m_Positions : 0, &e->_Transform());
         default:
             THROW2("Invalid light type.");
             return FALSE;
     }
 }
 
+//------------------------------------------------------------------------------
 // Glow build functions
-
+//------------------------------------------------------------------------------
 BOOL SceneBuilder::BuildGlow(CGlow* e)
 {
     l_glows.push_back(b_glow());
-    b_glow& b = l_glows.back();
+    b_glow&    b = l_glows.back();
     // material
     b_material mtl;
     ZeroMemory(&mtl, sizeof(mtl));
@@ -1208,8 +1213,9 @@ BOOL SceneBuilder::BuildGlow(CGlow* e)
     return TRUE;
 }
 
+//------------------------------------------------------------------------------
 // Portal build functions
-
+//------------------------------------------------------------------------------
 void SceneBuilder::BuildPortal(b_portal* b, CPortal* e)
 {
     b->sector_front = (u16)e->m_SectorFront->m_sector_num;
@@ -1218,8 +1224,9 @@ void SceneBuilder::BuildPortal(b_portal* b, CPortal* e)
     CopyMemory(b->vertices.begin(), e->m_SimplifyVertices.data(), e->m_SimplifyVertices.size() * sizeof(Fvector));
 }
 
+//------------------------------------------------------------------------------
 // shader build functions
-
+//------------------------------------------------------------------------------
 int SceneBuilder::FindInShaders(b_shader* s)
 {
     for (u32 i = 0; i < l_shaders.size(); i++)
@@ -1227,6 +1234,7 @@ int SceneBuilder::FindInShaders(b_shader* s)
             return i;
     return -1;
 }
+//------------------------------------------------------------------------------
 
 int SceneBuilder::BuildShader(const char* s)
 {
@@ -1246,8 +1254,9 @@ int SceneBuilder::BuildShader(const char* s)
     return sh_id;
 }
 
+//------------------------------------------------------------------------------
 // shader xrlc build functions
-
+//------------------------------------------------------------------------------
 int SceneBuilder::FindInShadersXRLC(b_shader* s)
 {
     for (u32 i = 0; i < l_shaders_xrlc.size(); i++)
@@ -1255,6 +1264,7 @@ int SceneBuilder::FindInShadersXRLC(b_shader* s)
             return i;
     return -1;
 }
+//------------------------------------------------------------------------------
 
 int SceneBuilder::BuildShaderXRLC(const char* s)
 {
@@ -1274,8 +1284,9 @@ int SceneBuilder::BuildShaderXRLC(const char* s)
     return sh_id;
 }
 
+//------------------------------------------------------------------------------
 // texture build functions
-
+//------------------------------------------------------------------------------
 int SceneBuilder::FindInTextures(const char* name)
 {
     for (u32 i = 0; i < l_textures.size(); i++)
@@ -1283,6 +1294,7 @@ int SceneBuilder::FindInTextures(const char* name)
             return i;
     return -1;
 }
+//------------------------------------------------------------------------------
 
 int SceneBuilder::BuildTexture(const char* name)
 {
@@ -1303,32 +1315,25 @@ int SceneBuilder::BuildTexture(const char* name)
     return tex_idx;
 }
 
+//------------------------------------------------------------------------------
 // material build functions
-
+//------------------------------------------------------------------------------
 int SceneBuilder::FindInMaterials(b_material* m)
 {
     for (u32 i = 0; i < l_materials.size(); i++)
     {
-        if ((l_materials[i].surfidx == m->surfidx) && (l_materials[i].shader == m->shader) &&
-            (l_materials[i].shader_xrlc == m->shader_xrlc) && (l_materials[i].sector == m->sector))
+        if ((l_materials[i].surfidx == m->surfidx) && (l_materials[i].shader == m->shader) && (l_materials[i].shader_xrlc == m->shader_xrlc) && (l_materials[i].sector == m->sector))
             return i;
     }
     return -1;
 }
+//------------------------------------------------------------------------------
 
 int SceneBuilder::BuildMaterial(CSurface* surf, int sector_num, bool allow_draft)
 {
-    return BuildMaterial(
-        surf->_ShaderName(), surf->_ShaderXRLCName(), surf->_Texture(),
-        ((surf->_FVF() & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT), sector_num, allow_draft);
+    return BuildMaterial(surf->_ShaderName(), surf->_ShaderXRLCName(), surf->_Texture(), ((surf->_FVF() & D3DFVF_TEXCOUNT_MASK) >> D3DFVF_TEXCOUNT_SHIFT), sector_num, allow_draft);
 }
-int SceneBuilder::BuildMaterial(
-    LPCSTR esh_name,
-    LPCSTR csh_name,
-    LPCSTR tx_name,
-    u32    tx_cnt,
-    int    sector_num,
-    bool   allow_draft)
+int SceneBuilder::BuildMaterial(LPCSTR esh_name, LPCSTR csh_name, LPCSTR tx_name, u32 tx_cnt, int sector_num, bool allow_draft)
 {
     b_material mtl;
     ZeroMemory(&mtl, sizeof(mtl));
@@ -1368,6 +1373,7 @@ int SceneBuilder::BuildMaterial(
     }
     return mtl_idx;
 }
+//------------------------------------------------------------------------------
 
 BOOL SceneBuilder::ParseStaticObjects(ObjectList& lst, LPCSTR prefix, bool b_selected_only)
 {
@@ -1393,7 +1399,8 @@ BOOL SceneBuilder::ParseStaticObjects(ObjectList& lst, LPCSTR prefix, bool b_sel
                 l_portals.push_back(b_portal());
                 BuildPortal(&l_portals.back(), (CPortal*)(*_F));
                 break;
-            case OBJCLASS_SCENEOBJECT: {
+            case OBJCLASS_SCENEOBJECT:
+            {
                 CSceneObject* obj = (CSceneObject*)(*_F);
                 if (obj->IsStatic())
                     bResult = BuildObject(obj);
@@ -1419,6 +1426,7 @@ BOOL SceneBuilder::ParseStaticObjects(ObjectList& lst, LPCSTR prefix, bool b_sel
     UI->ProgressEnd(pb);
     return bResult;
 }
+//------------------------------------------------------------------------------
 
 BOOL SceneBuilder::CompileStatic(bool b_selected_only)
 {
@@ -1427,7 +1435,7 @@ BOOL SceneBuilder::CompileStatic(bool b_selected_only)
         return FALSE;
     ESceneToolBase* pCurrentTool = Scene->GetOTool(cls);
 
-    BOOL bResult = TRUE;
+    BOOL            bResult      = TRUE;
 
     Clear();
 
@@ -1474,11 +1482,11 @@ BOOL SceneBuilder::CompileStatic(bool b_selected_only)
                 mt->GetStaticDesc(l_vert_cnt, l_face_cnt, b_selected_only, false);
         }
     }
-    l_faces    = xr_alloc<b_face>(l_face_cnt);
-    l_smgroups = xr_alloc<u32>(l_face_cnt);
-    l_verts    = xr_alloc<b_vertex>(l_vert_cnt);
+    l_faces                    = xr_alloc<b_face>(l_face_cnt);
+    l_smgroups                 = xr_alloc<u32>(l_face_cnt);
+    l_verts                    = xr_alloc<b_vertex>(l_vert_cnt);
 
-    l_scene_stat = xr_new<CSceneStat>(m_LevelBox);
+    l_scene_stat               = xr_new<CSceneStat>(m_LevelBox);
 
     // make hemisphere
     ESceneLightTool* lt        = dynamic_cast<ESceneLightTool*>(Scene->GetOTool(OBJCLASS_LIGHT));
@@ -1487,7 +1495,7 @@ BOOL SceneBuilder::CompileStatic(bool b_selected_only)
     if (0 != strcmp(LCONTROL_HEMI, h_control))
         BuildHemiLights(Scene->m_LevelOp.m_LightHemiQuality, LCONTROL_HEMI);
     // make sun
-    BuildSun(Scene->m_LevelOp.m_LightSunQuality, lt->m_SunShadowDir);
+    BuildSun(Scene->m_LevelOp.m_LightSunQuality, Scene->m_LevelOp.m_LightSunDispersion, lt->m_SunShadowDir);
     // parse scene
     SPBItem* pb = UI->ProgressStart(Scene->ObjCount(), "Parse scene objects...");
 

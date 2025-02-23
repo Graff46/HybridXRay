@@ -1,9 +1,9 @@
 ﻿#include "stdafx.h"
-#include "..\..\XrAPI\xrGameManager.h"
-#include "Utils\Cursor3D.h"
-#include "..\xrengine\GameFont.h"
-#include "UI\UIEditLibrary.h"
-#include "..\resources\resource.h"
+#include "../../xrAPI/xrGameManager.h"
+#include "Utils/Cursor3D.h"
+#include "../xrengine/GameFont.h"
+#include "UI/UIEditLibrary.h"
+#include "../resources/resource.h"
 
 #ifdef _LEVEL_EDITOR
 //.    if (m_Cursor->GetVisible()) RedrawScene();
@@ -204,6 +204,12 @@ CCommandVar CommandLoad(CCommandVar p1, CCommandVar p2)
             UI->SetStatus("# Level loading...");
             ExecCommand(COMMAND_CLEAR);
 
+            if (!FS.exist(temp_fn.c_str()))
+            {
+                ELog.DlgMsg(mtError, "! Can't find map file '%s'", temp_fn.c_str());
+                return FALSE;
+            }
+
             IReader* R = FS.r_open(temp_fn.c_str());
             if (!R)
                 return false;
@@ -265,56 +271,44 @@ CCommandVar CommandSaveBackup(CCommandVar p1, CCommandVar p2)
 
 CCommandVar CommandSave(CCommandVar p1, CCommandVar p2)
 {
-    if (!Scene->locked())
-    {
-        if (p2 == 1)
-        {
-            xr_string temp_fn = LTools->m_LastFileName.c_str();
-            if (EFS.GetSaveName(_maps_, temp_fn))
-                return ExecCommand(COMMAND_SAVE, temp_fn, 66);
-            else
-                return FALSE;
-        }
-        else
-        {
-            if (p1.IsInteger())
-                return ExecCommand(COMMAND_SAVE, xr_string(LTools->m_LastFileName.c_str()), 0);
-
-            xr_string temp_fn = xr_string(p1);
-            if (temp_fn.empty())
-            {
-                return ExecCommand(COMMAND_SAVE, temp_fn, 1);
-            }
-            else
-            {
-                xr_strlwr(temp_fn);
-
-                UI->SetStatus("# Level saving...");
-                if (xrGameManager::GetGame() == EGame::SHOC)
-                {
-                    Scene->Save(temp_fn.c_str(), true, (p2 == 66));
-                }
-                else
-                {
-                    Scene->SaveLTX(temp_fn.c_str(), false, (p2 == 66));
-                }
-                UI->ResetStatus();
-                // set new name
-                if (0 != xr_strcmp(Tools->m_LastFileName.c_str(), temp_fn.c_str()))
-                {
-                    Tools->m_LastFileName = temp_fn.c_str();
-                }
-                ExecCommand(COMMAND_UPDATE_CAPTION);
-                EPrefs->AppendRecentFile(temp_fn.c_str());
-                return TRUE;
-            }
-        }
-    }
-    else
+    if (Scene->locked())
     {
         ELog.DlgMsg(mtError, "! Scene sharing violation");
         return FALSE;
     }
+
+    if (p2 == 1)
+    {
+        xr_string temp_fn = LTools->m_LastFileName.c_str();
+        if (EFS.GetSaveName(_maps_, temp_fn))
+            return ExecCommand(COMMAND_SAVE, temp_fn, 66);
+        else
+            return FALSE;
+    }
+
+    if (p1.IsInteger())
+        return ExecCommand(COMMAND_SAVE, xr_string(LTools->m_LastFileName.c_str()), 0);
+
+    xr_string temp_fn = xr_string(p1);
+    if (temp_fn.empty())
+        return ExecCommand(COMMAND_SAVE, temp_fn, 1);
+
+    xr_strlwr(temp_fn);
+    UI->SetStatus("# Level saving...");
+
+    if (xrGameManager::GetGame() == EGame::SHOC)
+        Scene->Save(temp_fn.c_str(), false, true);
+    else
+        Scene->SaveLTX(temp_fn.c_str(), false, (p2 == 66));
+
+    UI->ResetStatus();
+    // set new name
+    if (xr_strcmp(Tools->m_LastFileName.c_str(), temp_fn.c_str()))
+        Tools->m_LastFileName = temp_fn.c_str();
+
+    ExecCommand(COMMAND_UPDATE_CAPTION);
+    EPrefs->AppendRecentFile(temp_fn.c_str());
+    return TRUE;
 }
 
 CCommandVar CommandClear(CCommandVar p1, CCommandVar p2)
@@ -964,14 +958,12 @@ CCommandVar CommandRefreshSnapObjects(CCommandVar p1, CCommandVar p2)
     return TRUE;
 }
 
-/*
 CCommandVar CommandRefreshSoundEnvs(CCommandVar p1, CCommandVar p2)
 {
     ::Sound->refresh_env_library();
-    return 						TRUE;
-//		::Sound->_restart();
+    return TRUE;
+//  ::Sound->_restart();
 }
-*/
 
 CCommandVar CommandRefreshSoundEnvGeometry(CCommandVar p1, CCommandVar p2)
 {
@@ -1121,7 +1113,7 @@ void CLevelMain::RegisterCommands()
     REGISTER_CMD_S(COMMAND_CLEAR_SNAP_OBJECTS, CommandClearSnapObjects);
     REGISTER_CMD_S(COMMAND_SELECT_SNAP_OBJECTS, CommandSelectSnapObjects);
     REGISTER_CMD_S(COMMAND_REFRESH_SNAP_OBJECTS, CommandRefreshSnapObjects);
-    //	REGISTER_CMD_S	    (COMMAND_REFRESH_SOUND_ENVS,        CommandRefreshSoundEnvs);
+    REGISTER_CMD_S(COMMAND_REFRESH_SOUND_ENVS, CommandRefreshSoundEnvs);
     REGISTER_CMD_S(COMMAND_REFRESH_SOUND_ENV_GEOMETRY, CommandRefreshSoundEnvGeometry);
     REGISTER_CMD_S(COMMAND_SHOWCONTEXTMENU, CommandShowContextMenu);
     REGISTER_CMD_S(COMMAND_REFRESH_UI_BAR, CommandRefreshUIBar);
@@ -1197,7 +1189,7 @@ void RetrieveSceneObjPointAndNormal(Fvector& hitpoint, Fvector* hitnormal, const
 bool EditLibPickObjectGeometry(Fvector& hitpoint, const Fvector& start, const Fvector& direction, int bSnap, Fvector* hitnormal)
 {
     SRayPickInfo pinf;
-    /*if( TfrmEditLibrary::RayPick( start, direction, &pinf ) )
+    /*if (UIEditLibrary::RayPick(start, direction, &pinf))
     {
         RetrieveSceneObjPointAndNormal( hitpoint,  hitnormal, pinf, bSnap );
         return true;
@@ -1307,10 +1299,10 @@ bool CLevelMain::SelectionFrustum(CFrustum& frustum)
     Fvector  st, d, p[4];
     Ivector2 pt[4];
 
-    float depth = 0;
+    float    depth = 0;
 
-    float x1 = m_StartCp.x, x2 = m_CurrentCp.x;
-    float y1 = m_StartCp.y, y2 = m_CurrentCp.y;
+    float    x1 = m_StartCp.x, x2 = m_CurrentCp.x;
+    float    y1 = m_StartCp.y, y2 = m_CurrentCp.y;
 
     if (!(x1 != x2 && y1 != y2))
         return false;
@@ -1480,7 +1472,7 @@ void CLevelMain::OnStats(CGameFont* font)
 {
     float Height = font->GetHeight();
     font->SetColor(color_rgba(255, 0, 0, 255));
-    font->SetHeight(14);
+    font->SetHeight(11);
     if (!Scene->m_RTFlags.is(EScene::flIsBuildedCForm))
     {
         font->OutNext("NEED REBUILD CFORM");

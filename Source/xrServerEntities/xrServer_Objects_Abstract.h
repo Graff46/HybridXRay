@@ -6,10 +6,9 @@
 //	Description : Server objects
 ////////////////////////////////////////////////////////////////////////////
 #pragma once
-#pragma pack(push, 4)
 #include "xrServer_Space.h"
 #include "../xrCDB/xrCDB.h"
-#include "../../XrEngine/xrISEAbstract.h"
+#include "../../xrEngine/xrISEAbstract.h"
 
 class NET_Packet;
 class CDUInterface;
@@ -20,7 +19,7 @@ class CDUInterface;
 #endif
 #endif
 
-#include "..\Editors\Public\xrEProps.h"
+#include "../Editors/Public/xrEProps.h"
 
 #ifndef XRGAME_EXPORTS
 #include "DrawUtils.h"
@@ -32,5 +31,3 @@ class CDUInterface;
 
 #include "xrServer_Objects_Abstract_Base.h"
 #pragma warning(pop)
-
-#pragma pack(pop)

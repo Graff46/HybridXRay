@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "Utils/Cursor3D.h"
 #include "UI/UIEditLibrary.h"
+#include "Scene/LEPhysics.h"
 
 #define DETACH_FRAME(a) \
     if (a)              \
@@ -24,6 +25,7 @@ CLevelTool::CLevelTool()
     m_Flags.zero();
     m_ToolForm                 = 0;
     m_CompilerProcess.hProcess = 0;
+    pCurTool                   = 0;
 }
 
 CLevelTool::~CLevelTool() {}
@@ -76,8 +78,7 @@ bool CLevelTool::MouseStart(TShiftState Shift)
     inherited::MouseStart(Shift);
     if (pCurTool && pCurTool->pCurControl)
     {
-        if ((pCurTool->pCurControl->Action() != etaSelect) &&
-            (!pCurTool->IsEditable() || !pCurTool->AllowMouseStart() || (pCurTool->FClassID == OBJCLASS_DUMMY)))
+        if ((pCurTool->pCurControl->Action() != etaSelect) && (!pCurTool->IsEditable() || !pCurTool->AllowMouseStart() || (pCurTool->FClassID == OBJCLASS_DUMMY)))
             return false;
 
         return pCurTool->pCurControl->Start(Shift);
@@ -161,7 +162,7 @@ void CLevelTool::RealSetAction(ETAction act)
 void CLevelTool::SetAction(ETAction act)
 {
     // если мышь захвачена - изменим action после того как она освободится
-    if (UI->IsMouseCaptured() || UI->IsMouseInUse() || !false)
+    if (UI->IsMouseCaptured() || UI->IsMouseInUse())
     {
         m_Flags.set(flChangeAction, TRUE);
         iNeedAction = act;
@@ -208,7 +209,7 @@ void CLevelTool::ResetSubTarget()
 void CLevelTool::SetTarget(ObjClassID tgt, int sub_tgt)
 {
     // если мышь захвачена - изменим target после того как она освободится
-    if (UI->IsMouseCaptured() || UI->IsMouseInUse() || !false)
+    if (UI->IsMouseCaptured() || UI->IsMouseInUse())
     {
         m_Flags.set(flChangeTarget, TRUE);
         if (tgt == OBJCLASS_WAY && sub_tgt == 2 && target == tgt)
@@ -272,14 +273,14 @@ void CLevelTool::ShowProperties(LPCSTR focus_to_item)
         MainForm->GetPropertiesFrom()->Open();
 
     /*
-    if(focus_to_item)
-        m_Props->SelectFolder	(focus_to_item);
+    if (focus_to_item)
+        m_Props->FindItem(focus_to_item);
     else
     {
-        if(pCurTool && pCurTool->ClassID!=OBJCLASS_DUMMY)
+        if (pCurTool && pCurTool->FClassID != OBJCLASS_DUMMY)
         {
             LPCSTR cn = pCurTool->ClassDesc();
-            m_Props->SelectFolder	(cn);
+            m_Props->FindItem(cn);
         }
     }
     */
@@ -367,8 +368,9 @@ void CLevelTool::GetCurrentFog(u32& fog_color, float& s_fog, float& e_fog)
     }
     else
     {
-        s_fog = psDeviceFlags.is(rsFog) ? (1.0f - fFogness) * 0.85f * UI->ZFar() : 0.99f * UI->ZFar();
-        e_fog = psDeviceFlags.is(rsFog) ? 0.91f * UI->ZFar() : UI->ZFar();
+        s_fog     = psDeviceFlags.is(rsFog) ? (1.0f - fFogness) * 0.85f * UI->ZFar() : 0.99f * UI->ZFar();
+        e_fog     = psDeviceFlags.is(rsFog) ? 0.91f * UI->ZFar() : UI->ZFar();
+        fog_color = dwFogColor;
     }
 }
 
@@ -389,7 +391,8 @@ void CLevelTool::OnFrame()
     EEditorState est = UI->GetEState();
     if ((est == esEditScene) || (est == esEditLibrary) || (est == esEditLightAnim))
     {
-        if (true /*!UI->IsMouseCaptured()*/)
+        // if (true /*!UI->IsMouseCaptured()*/)
+        if (!UI->IsMouseCaptured())
         {
             // если нужно изменить target выполняем после того как мышь освободится
             if (m_Flags.is(flChangeTarget))
@@ -404,7 +407,6 @@ void CLevelTool::OnFrame()
             RealUpdateObjectList();
         // TfrmEditLightAnim::OnIdle();
     }
-
 
     if (IsCompilerRunning())
     {
@@ -477,7 +479,10 @@ void CLevelTool::Render()
         case esEditScene:
             Scene->Render(EDevice->m_Camera.GetTransform());
             if (psDeviceFlags.is(rsEnvironment) || UI->IsPlayInEditor())
+            {
+                g_pGamePersistent->Environment().RenderFlares();
                 g_pGamePersistent->Environment().RenderLast();
+            }
             break;
         case esBuildLevel:
             Builder.OnRender();
@@ -486,7 +491,7 @@ void CLevelTool::Render()
     // draw cursor
     LUI->m_Cursor->Render();
 
-   inherited::Render();
+    inherited::Render();
 }
 
 void CLevelTool::ShowObjectList()
@@ -505,7 +510,7 @@ bool CLevelTool::IsModified()
     return Scene->IsUnsaved();
 }
 
-#include "../XrECore/Editor/EditMesh.h"
+#include "../xrECore/Editor/EditMesh.h"
 bool CLevelTool::RayPick(const Fvector& start, const Fvector& dir, float& dist, Fvector* pt, Fvector* n)
 {
     if (Scene->ObjCount() && (UI->GetEState() == esEditScene))
@@ -590,16 +595,16 @@ bool CLevelTool::GetSelectionPosition(Fmatrix& result)
 }
 void CLevelTool::Simulate()
 {
-    /*	if (!g_scene_physics.Simulating())
+    if (!g_scene_physics.Simulating())
             g_scene_physics.CreateShellsSelected();
         else
             g_scene_physics.DestroyAll();
         UI->RedrawScene();
-        ExecCommand(COMMAND_REFRESH_UI_BAR);*/
+        ExecCommand(COMMAND_REFRESH_UI_BAR);
 }
 void CLevelTool::UseSimulatePositions()
 {
-    /*g_scene_physics.UseSimulatePoses();*/
+    g_scene_physics.UseSimulatePoses();
 }
 
 void CLevelTool::RunGame(const char* Params)
@@ -616,20 +621,19 @@ void CLevelTool::RunGame(const char* Params)
     ZeroMemory(&m_GameProcess, sizeof(m_GameProcess));
 
     string_path CommandLine;
-    xr_sprintf(CommandLine, "Xr3DA.exe %s", Params);
+    xr_sprintf(CommandLine, "HybridXRay.exe %s", Params);
     Msg("~ Run Game %s.\n", CommandLine);
     // Start the child process.
-    if (!CreateProcess(
-            NULL,             // No module name (use command line)
-            CommandLine,      // Command line
-            NULL,             // Process handle not inheritable
-            NULL,             // Thread handle not inheritable
-            FALSE,            // Set handle inheritance to FALSE
-            0,                // No creation flags
-            NULL,             // Use parent's environment block
-            NULL,             // Use parent's starting directory
-            &si,              // Pointer to STARTUPINFO structure
-            &m_GameProcess)   // Pointer to PROCESS_INFORMATION structure
+    if (!CreateProcess(NULL,   // No module name (use command line)
+            CommandLine,       // Command line
+            NULL,              // Process handle not inheritable
+            NULL,              // Thread handle not inheritable
+            FALSE,             // Set handle inheritance to FALSE
+            0,                 // No creation flags
+            NULL,              // Use parent's environment block
+            NULL,              // Use parent's starting directory
+            &si,               // Pointer to STARTUPINFO structure
+            &m_GameProcess)    // Pointer to PROCESS_INFORMATION structure
     )
     {
         Msg("! PlayPC:CreateProcess failed (%d).\n", GetLastError());
@@ -652,11 +656,10 @@ void CLevelTool::RunXrLC()
     ZeroMemory(&m_CompilerProcess, sizeof(m_CompilerProcess));
 
     string_path CommandLine;
-    xr_sprintf(CommandLine, "XrLC.exe -f %s", Scene->m_LevelOp.m_FNLevelPath.c_str());
+    xr_sprintf(CommandLine, "xrLC.exe -f %s", Scene->m_LevelOp.m_FNLevelPath.c_str());
     Msg("~ Run %s.\n", CommandLine);
     // Start the child process.
-    if (!CreateProcess(
-            NULL,                 // No module name (use command line)
+    if (!CreateProcess(NULL,      // No module name (use command line)
             CommandLine,          // Command line
             NULL,                 // Process handle not inheritable
             NULL,                 // Thread handle not inheritable
@@ -668,7 +671,7 @@ void CLevelTool::RunXrLC()
             &m_CompilerProcess)   // Pointer to PROCESS_INFORMATION structure
     )
     {
-        Msg("! XrLC:CreateProcess failed (%d).\n", GetLastError());
+        Msg("! xrLC:CreateProcess failed (%d).\n", GetLastError());
         return;
     }
 }
@@ -690,8 +693,7 @@ void CLevelTool::RunXrDO()
     xr_sprintf(CommandLine, "xrDO_light.exe -f %s", Scene->m_LevelOp.m_FNLevelPath.c_str());
     Msg("~ Run %s.\n", CommandLine);
     // Start the child process.
-    if (!CreateProcess(
-            NULL,                 // No module name (use command line)
+    if (!CreateProcess(NULL,      // No module name (use command line)
             CommandLine,          // Command line
             NULL,                 // Process handle not inheritable
             NULL,                 // Thread handle not inheritable
@@ -725,8 +727,7 @@ void CLevelTool::RunXrAI_Spawn(bool current_level)
     xr_sprintf(CommandLine, "xrAI.exe -no_separator_check -s %s -out all", current_level ? Scene->m_LevelOp.m_FNLevelPath.c_str() : "");
     Msg("~ Run %s.\n", CommandLine);
     // Start the child process.
-    if (!CreateProcess(
-            NULL,                 // No module name (use command line)
+    if (!CreateProcess(NULL,      // No module name (use command line)
             CommandLine,          // Command line
             NULL,                 // Process handle not inheritable
             NULL,                 // Thread handle not inheritable
@@ -760,8 +761,7 @@ void CLevelTool::RunXrAI_AIMap(bool draw)
     xr_sprintf(CommandLine, "xrAI.exe -f %s %s", Scene->m_LevelOp.m_FNLevelPath.c_str(), draw ? "-draft" : "");
     Msg("~ Run %s.\n", CommandLine);
     // Start the child process.
-    if (!CreateProcess(
-            NULL,                 // No module name (use command line)
+    if (!CreateProcess(NULL,      // No module name (use command line)
             CommandLine,          // Command line
             NULL,                 // Process handle not inheritable
             NULL,                 // Thread handle not inheritable
@@ -795,8 +795,7 @@ void CLevelTool::RunXrAI_Verify()
     xr_sprintf(CommandLine, "xrAI.exe -verify %s", Scene->m_LevelOp.m_FNLevelPath.c_str());
     Msg("~ Run %s.\n", CommandLine);
     // Start the child process.
-    if (!CreateProcess(
-            NULL,                 // No module name (use command line)
+    if (!CreateProcess(NULL,      // No module name (use command line)
             CommandLine,          // Command line
             NULL,                 // Process handle not inheritable
             NULL,                 // Thread handle not inheritable

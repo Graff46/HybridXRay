@@ -1,8 +1,8 @@
 ﻿#include "stdafx.h"
-#include "..\XrECore\Editor\EditorChooseEvents.h"
-#include "..\resources\splash.h"
-#include "..\XrEUI\ImGuizmo.h"
-#include "Editor\Utils\Gizmo\IM_Manipulator.h"
+#include "../xrECore/Editor/EditorChooseEvents.h"
+#include "../resources/splash.h"
+#include "../xrEUI/ImGuizmo.h"
+#include "Editor/Utils/Gizmo/IM_Manipulator.h"
 
 UIMainForm* MainForm = nullptr;
 UIMainForm::UIMainForm()
@@ -300,27 +300,54 @@ void UIMainForm::DrawRenderToolBar(ImVec2 Pos, ImVec2 Size)
                 {
                     if (ImGui::BeginMenu("Environment"_RU >> u8"Погода"))
                     {
+                        // --------------------------------------------------------------------------------------------
+                        {
+                            if (ImGui::Button("Weather properties"_RU >> u8"Свойства погоды"))
+                            {
+                                ExecCommand(COMMAND_WEATHER_PROPERTIES);
+                            }
+                            if (ImGui::IsItemHovered())
+                                ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+                        }
+                        // --------------------------------------------------------------------------------------------
+                        ImGui::Separator();
+                        // --------------------------------------------------------------------------------------------
                         bool selected = !psDeviceFlags.test(rsEnvironment);
                         if (ImGui::MenuItem("None", "", &selected))
                         {
                             psDeviceFlags.set(rsEnvironment, false);
+                            g_pGamePersistent->Environment().Invalidate();
                             UI->RedrawScene();
                         }
                         if (ImGui::IsItemHovered())
                             ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
                         ImGui::Separator();
-                        for (auto& i : g_pGamePersistent->Environment().WeatherCycles)
+                        for (auto& i: g_pGamePersistent->Environment().WeatherCycles)
                         {
-                            selected = psDeviceFlags.test(rsEnvironment) && i.first == g_pGamePersistent->Environment().CurrentCycleName;
+                            #pragma TODO("Romann: Если в UI_MainCommand.cpp исправится применение погодного цикла из ini файла - то тут надо заменить 'EPrefs->sWeather' на 'g_pGamePersistent->Environment().CurrentCycleName'")
+                            selected = psDeviceFlags.test(rsEnvironment) && i.first == EPrefs->sWeather;
                             if (ImGui::MenuItem(i.first.c_str(), "", &selected))
                             {
                                 psDeviceFlags.set(rsEnvironment, true);
                                 g_pGamePersistent->Environment().SetWeather(i.first.c_str(), true);
+                                EPrefs->sWeather = g_pGamePersistent->Environment().CurrentCycleName;
                                 UI->RedrawScene();
                             }
                             if (ImGui::IsItemHovered())
                                 ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
                         }
+                        // --------------------------------------------------------------------------------------------
+                        ImGui::Separator();
+                        // --------------------------------------------------------------------------------------------
+                        if (ImGui::Button("Reload"_RU >> u8"Перезагрузить"))
+                        {
+                            Engine.ReloadSettings();
+                            g_pGamePersistent->Environment().ED_Reload();
+                            UI->RedrawScene();
+                        }
+                        if (ImGui::IsItemHovered())
+                            ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+                        // --------------------------------------------------------------------------------------------
                         ImGui::EndMenu();
                     }
                     if (ImGui::IsItemHovered())
@@ -370,12 +397,7 @@ void UIMainForm::DrawRenderToolBar(ImVec2 Pos, ImVec2 Size)
                         ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
                     if (ImGui::BeginMenu("Fill Mode"_RU >> u8"Режим отображения"))
                     {
-                        bool selected[3] =
-                        {
-                            EDevice->dwFillMode == D3DFILL_POINT,
-                            EDevice->dwFillMode == D3DFILL_WIREFRAME,
-                            EDevice->dwFillMode == D3DFILL_SOLID
-                        };
+                        bool selected[3] = {EDevice->dwFillMode == D3DFILL_POINT, EDevice->dwFillMode == D3DFILL_WIREFRAME, EDevice->dwFillMode == D3DFILL_SOLID};
                         if (ImGui::MenuItem("Point"_RU >> u8"Точки", "", &selected[0]))
                         {
                             EDevice->dwFillMode = D3DFILL_POINT;
@@ -476,7 +498,7 @@ void UIMainForm::DrawRenderToolBar(ImVec2 Pos, ImVec2 Size)
     // --------------------------------------------------------------------------------------------
     // Action
     {
-        Fvector p, n;
+        Fvector  p, n;
         ETAction Action = LTools->GetAction();
         ImGui::BeginGroup();
         // --------------------------------------------------------------------------------------------
@@ -518,7 +540,7 @@ void UIMainForm::DrawRenderToolBar(ImVec2 Pos, ImVec2 Size)
                 ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(ImGuiCol_Border));
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetStyleColorVec4(ImGuiCol_Border));
                 if (LUI->ScenePickObjectGeometry(p, UI->m_CurrentRStart, UI->m_CurrentRDir, 1, &n))
-                     ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+                    ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
             }
             m_tAdd->Load();
             if (ImGui::ImageButton(m_tAdd->surface_get(), ImVec2(16, ImGui::GetFontSize())))
@@ -842,7 +864,7 @@ void UIMainForm::DrawRenderToolBar(ImVec2 Pos, ImVec2 Size)
                 }
             }
             ImGui::SameLine();
-            ImGui::SetNextItemWidth(ImGui::GetFontSize() * 3.5); 
+            ImGui::SetNextItemWidth(ImGui::GetFontSize() * 3.5);
             xr_sprintf(Temp, "%.2f", Tools->m_MoveSnap);
             if (ImGui::BeginCombo("##move", Temp, ImGuiComboFlags_None))
             {
@@ -1211,7 +1233,7 @@ void UIMainForm::DrawRenderToolBar(ImVec2 Pos, ImVec2 Size)
         // --------------------------------------------------------------------------------------------
         // Edged Faces | Краевые грани
         {
-            bool selected = psDeviceFlags.test(rsEdgedFaces);
+            bool selected   = psDeviceFlags.test(rsEdgedFaces);
             bool bPushColor = false;
             if (selected)
             {
@@ -1621,6 +1643,6 @@ void UIMainForm::DrawRenderToolBar(ImVec2 Pos, ImVec2 Size)
     // --------------------------------------------------------------------------------------------
     // Gizmo
     {
-      imManipulator.Render(Pos.x, Pos.y, Size.x, Size.y);
+        imManipulator.Render(Pos.x, Pos.y, Size.x, Size.y);
     }
 }

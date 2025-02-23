@@ -21,19 +21,19 @@ public:
 
     virtual void OnFrame();
 
-    void RefreshEnvLibrary();
-    void RefreshEnvGeometry()
+    void         RefreshEnvLibrary();
+    void         RefreshEnvGeometry()
     {
         bNeedRefreshEnvGeom = true;
     }
 
-    //    bool 		MakeEnvGeometry		(CMemoryWriter& F, bool bErrMsg=false);
+    bool      MakeEnvGeometry(CMemoryWriter& F, bool bErrMsg = false);
 
-    bool Validate();
+    bool      Validate();
 
-    void MuteSounds(BOOL bVal);
+    void      MuteSounds(BOOL bVal);
 
-    void RefreshSounds(bool bSync);
+    void      RefreshSounds(bool bSync);
 
     xr_string UpdateFileName(xr_string& fn);
 };

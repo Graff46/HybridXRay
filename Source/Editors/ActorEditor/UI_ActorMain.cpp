@@ -123,9 +123,9 @@ CCommandVar CActorTools::CommandExportDM(CCommandVar p1, CCommandVar p2)
     if (p1.IsString() || EFS.GetSaveName("$game_dm$", fn))
     {
         if (0 != (res = ExportDM(fn.c_str())))
-            ELog.Msg(mtInformation, "+ Export complete.");
+            ELog.Msg(mtInformation, "+ Export complete."), ELog.Msg(mtInformation, "+        %s", fn.c_str());
         else
-            ELog.Msg(mtError, "! Export failed.");
+            ELog.Msg(mtError, "! Export failed."), ELog.Msg(mtError, "!        %s", fn.c_str());
     }
     return res;
 }
@@ -137,9 +137,9 @@ CCommandVar CActorTools::CommandExportOBJ(CCommandVar p1, CCommandVar p2)
     if (p1.IsString() || EFS.GetSaveName("$import$", fn, 0, 5))
     {
         if (0 != (res = ExportOBJ(fn.c_str())))
-            ELog.Msg(mtInformation, "+ Export complete.");
+            ELog.Msg(mtInformation, "+ Export complete."), ELog.Msg(mtInformation, "+        %s", fn.c_str());
         else
-            ELog.Msg(mtError, "! Export failed.");
+            ELog.Msg(mtError, "! Export failed."), ELog.Msg(mtError, "!        %s", fn.c_str());
     }
     return res;
 }
@@ -150,9 +150,9 @@ CCommandVar CActorTools::CommandExportOGF(CCommandVar p1, CCommandVar p2)
     if (p1.IsString() || EFS.GetSaveName("$game_meshes$", fn, 0, 0))
     {
         if (0 != (res = ATools->ExportOGF(fn.c_str())))
-            ELog.Msg(mtInformation, "+ Export complete.");
+            ELog.Msg(mtInformation, "+ Export complete."), ELog.Msg(mtInformation, "+        %s", fn.c_str());
         else
-            ELog.Msg(mtError, "! Export failed.");
+            ELog.Msg(mtError, "! Export failed."), ELog.Msg(mtError, "!        %s", fn.c_str());
     }
     return res;
 }
@@ -164,9 +164,9 @@ CCommandVar CActorTools::CommandExportOMF(CCommandVar p1, CCommandVar p2)
     if (p1.IsString() || EFS.GetSaveName("$game_meshes$", fn, 0, 1))
     {
         if (0 != (res = ExportOMF(fn.c_str())))
-            ELog.Msg(mtInformation, "+ Export complete.");
+            ELog.Msg(mtInformation, "+ Export complete."), ELog.Msg(mtInformation, "+        %s", fn.c_str());
         else
-            ELog.Msg(mtError, "! Export failed.");
+            ELog.Msg(mtError, "! Export failed."), ELog.Msg(mtError, "!        %s", fn.c_str());
     }
     return res;
 }
@@ -177,9 +177,9 @@ CCommandVar CActorTools::CommandExportCPP(CCommandVar p1, CCommandVar p2)
     if (p1.IsString() || EFS.GetSaveName(_import_, fn, 0, 7))
     {
         if (0 != (res = ExportCPP(fn.c_str())))
-            ELog.Msg(mtInformation, "+ Export complete.");
+            ELog.Msg(mtInformation, "+ Export complete."), ELog.Msg(mtInformation, "+        %s", fn.c_str());
         else
-            ELog.Msg(mtError, "! Export failed.");
+            ELog.Msg(mtError, "! Export failed."), ELog.Msg(mtError, "!        %s", fn.c_str());
     }
     return res;
 }
@@ -517,7 +517,7 @@ void CActorMain::RegisterCommands()
     APPEND_SUB_CMD("Save As", xr_shortcut('S', false, true, true), 0, 1);
     REGISTER_SUB_CMD_END;
     REGISTER_CMD_CE(COMMAND_IMPORT, "File\\Import", xr_shortcut(), ATools, CActorTools::CommandImport, true);
-    REGISTER_CMD_CE(COMMAND_EXPORT_DM, "File\\Export DM", xr_shortcut(  ), ATools, CActorTools::CommandExportDM, true);
+    REGISTER_CMD_CE(COMMAND_EXPORT_DM, "File\\Export DM", xr_shortcut(), ATools, CActorTools::CommandExportDM, true);
     REGISTER_CMD_CE(COMMAND_EXPORT_OBJ, "File\\Export OBJ", xr_shortcut(), ATools, CActorTools::CommandExportOBJ, true);
     REGISTER_CMD_CE(COMMAND_EXPORT_OGF, "File\\Export OGF", xr_shortcut(), ATools, CActorTools::CommandExportOGF, true);
     REGISTER_CMD_CE(COMMAND_EXPORT_OMF, "File\\Export OMF", xr_shortcut(), ATools, CActorTools::CommandExportOMF, true);
@@ -540,10 +540,10 @@ void CActorMain::RegisterCommands()
     REGISTER_CMD_S(COMMAND_UPDATE_TOOLBAR, CommandUpdateToolBar);
     REGISTER_CMD_S(COMMAND_UPDATE_CAPTION, CommandUpdateCaption);
     REGISTER_SUB_CMD_SE(COMMAND_CHANGE_TARGET, "Change Target", CommandChangeTarget, true);
-    APPEND_SUB_CMD(BONES_PREFIX, xr_shortcut(), xr_string(BONES_PREFIX),  0);
-    APPEND_SUB_CMD(MOTIONS_PREFIX, xr_shortcut(), xr_string(MOTIONS_PREFIX),  0);
-    APPEND_SUB_CMD(OBJECT_PREFIX, xr_shortcut(), xr_string(OBJECT_PREFIX),  0);
-    APPEND_SUB_CMD(SURFACES_PREFIX, xr_shortcut(), xr_string(SURFACES_PREFIX),  0);
+    APPEND_SUB_CMD(BONES_PREFIX, xr_shortcut(), xr_string(BONES_PREFIX), 0);
+    APPEND_SUB_CMD(MOTIONS_PREFIX, xr_shortcut(), xr_string(MOTIONS_PREFIX), 0);
+    APPEND_SUB_CMD(OBJECT_PREFIX, xr_shortcut(), xr_string(OBJECT_PREFIX), 0);
+    APPEND_SUB_CMD(SURFACES_PREFIX, xr_shortcut(), xr_string(SURFACES_PREFIX), 0);
     REGISTER_SUB_CMD_END;
 }
 
